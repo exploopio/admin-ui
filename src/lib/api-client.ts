@@ -74,11 +74,35 @@ class ApiClient {
   // ==========================================================================
 
   async getPlatformStats(): Promise<PlatformStats> {
-    return this.request<PlatformStats>('/api/v1/admin/platform/stats')
+    // Fetch stats from separate endpoints and combine
+    const [agentStats, jobStats] = await Promise.all([
+      this.getAgentStats().catch(() => ({ total: 0, online: 0, offline: 0, disabled: 0 })),
+      this.getJobStats().catch(() => ({ queued: 0, running: 0, completed: 0, failed: 0 })),
+    ])
+
+    return {
+      agents: {
+        total: agentStats.total,
+        online: agentStats.online,
+        offline: agentStats.offline,
+        draining: agentStats.disabled, // Map disabled to draining for UI
+      },
+      jobs: {
+        queued: jobStats.queued,
+        running: jobStats.running,
+        completed_24h: jobStats.completed,
+        failed_24h: jobStats.failed,
+      },
+      tokens: {
+        active: 0, // TODO: Add token stats endpoint
+        expired: 0,
+        revoked: 0,
+      },
+    }
   }
 
   // ==========================================================================
-  // Agents
+  // Platform Agents
   // ==========================================================================
 
   async listAgents(params?: {
@@ -94,33 +118,46 @@ class ApiClient {
     if (params?.per_page) searchParams.set('per_page', params.per_page.toString())
 
     const query = searchParams.toString()
-    return this.request<PaginatedResponse<Agent>>(`/api/v1/admin/agents${query ? `?${query}` : ''}`)
+    return this.request<PaginatedResponse<Agent>>(`/api/v1/admin/platform-agents${query ? `?${query}` : ''}`)
   }
 
   async getAgent(id: string): Promise<Agent> {
-    return this.request<Agent>(`/api/v1/admin/agents/${id}`)
+    return this.request<Agent>(`/api/v1/admin/platform-agents/${id}`)
   }
 
-  async drainAgent(id: string): Promise<Agent> {
-    return this.request<Agent>(`/api/v1/admin/agents/${id}/drain`, {
+  async getAgentStats(): Promise<{ total: number; online: number; offline: number; disabled: number }> {
+    return this.request<{ total: number; online: number; offline: number; disabled: number }>('/api/v1/admin/platform-agents/stats')
+  }
+
+  async disableAgent(id: string): Promise<Agent> {
+    return this.request<Agent>(`/api/v1/admin/platform-agents/${id}/disable`, {
       method: 'POST',
     })
   }
 
-  async uncordonAgent(id: string): Promise<Agent> {
-    return this.request<Agent>(`/api/v1/admin/agents/${id}/uncordon`, {
+  async enableAgent(id: string): Promise<Agent> {
+    return this.request<Agent>(`/api/v1/admin/platform-agents/${id}/enable`, {
       method: 'POST',
     })
   }
 
   async deleteAgent(id: string): Promise<void> {
-    return this.request<void>(`/api/v1/admin/agents/${id}`, {
+    return this.request<void>(`/api/v1/admin/platform-agents/${id}`, {
       method: 'DELETE',
     })
   }
 
+  // Legacy aliases for backward compatibility
+  async drainAgent(id: string): Promise<Agent> {
+    return this.disableAgent(id)
+  }
+
+  async uncordonAgent(id: string): Promise<Agent> {
+    return this.enableAgent(id)
+  }
+
   // ==========================================================================
-  // Jobs
+  // Platform Jobs
   // ==========================================================================
 
   async listJobs(params?: {
@@ -138,21 +175,25 @@ class ApiClient {
     if (params?.per_page) searchParams.set('per_page', params.per_page.toString())
 
     const query = searchParams.toString()
-    return this.request<PaginatedResponse<Job>>(`/api/v1/admin/jobs${query ? `?${query}` : ''}`)
+    return this.request<PaginatedResponse<Job>>(`/api/v1/admin/platform-jobs${query ? `?${query}` : ''}`)
   }
 
   async getJob(id: string): Promise<Job> {
-    return this.request<Job>(`/api/v1/admin/jobs/${id}`)
+    return this.request<Job>(`/api/v1/admin/platform-jobs/${id}`)
+  }
+
+  async getJobStats(): Promise<{ queued: number; running: number; completed: number; failed: number }> {
+    return this.request<{ queued: number; running: number; completed: number; failed: number }>('/api/v1/admin/platform-jobs/stats')
   }
 
   async cancelJob(id: string): Promise<Job> {
-    return this.request<Job>(`/api/v1/admin/jobs/${id}/cancel`, {
+    return this.request<Job>(`/api/v1/admin/platform-jobs/${id}/cancel`, {
       method: 'POST',
     })
   }
 
   async retryJob(id: string): Promise<Job> {
-    return this.request<Job>(`/api/v1/admin/jobs/${id}/retry`, {
+    return this.request<Job>(`/api/v1/admin/platform-jobs/${id}/retry`, {
       method: 'POST',
     })
   }
@@ -171,7 +212,7 @@ class ApiClient {
 
     const query = searchParams.toString()
     return this.request<PaginatedResponse<BootstrapToken>>(
-      `/api/v1/admin/tokens${query ? `?${query}` : ''}`
+      `/api/v1/admin/bootstrap-tokens${query ? `?${query}` : ''}`
     )
   }
 
@@ -181,15 +222,16 @@ class ApiClient {
     expires_in_hours: number
     allowed_regions?: string[]
   }): Promise<{ token: string; token_id: string }> {
-    return this.request<{ token: string; token_id: string }>('/api/v1/admin/tokens', {
+    return this.request<{ token: string; token_id: string }>('/api/v1/admin/bootstrap-tokens', {
       method: 'POST',
       body: JSON.stringify(data),
     })
   }
 
   async revokeBootstrapToken(id: string): Promise<void> {
-    return this.request<void>(`/api/v1/admin/tokens/${id}`, {
-      method: 'DELETE',
+    // Backend uses POST for revoke, not DELETE
+    return this.request<void>(`/api/v1/admin/bootstrap-tokens/${id}/revoke`, {
+      method: 'POST',
     })
   }
 

@@ -16,7 +16,8 @@ if (process.env.ANALYZE === 'true') {
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
-  reactCompiler: true,
+  // Note: reactCompiler requires babel-plugin-react-compiler package
+  // Disabled until package is added to dependencies
 
   /**
    * Output Configuration for Docker
@@ -61,6 +62,8 @@ const nextConfig: NextConfig = {
             value: 'camera=(), microphone=(), geolocation=()',
           },
           // Content Security Policy - Stricter for Admin UI
+          // In production, API calls go through same-origin proxy
+          // In development, allow direct API calls
           {
             key: 'Content-Security-Policy',
             value: [
@@ -70,7 +73,7 @@ const nextConfig: NextConfig = {
               "style-src-elem 'self' 'unsafe-inline' https://fonts.googleapis.com", // Google Fonts stylesheets
               "img-src 'self' data: https:",
               "font-src 'self' data: https://fonts.gstatic.com", // Google Fonts files
-              "connect-src 'self'", // API calls through /api/proxy (same-origin)
+              "connect-src 'self' http://localhost:* https://*.rediver.io *", // API calls (dev: localhost, prod: rediver.io)
               "frame-ancestors 'none'",
               "base-uri 'self'",
               "form-action 'self'",

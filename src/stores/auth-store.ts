@@ -40,12 +40,20 @@ export const useAuthStore = create<AuthState>()(
           // Set API key in client
           apiClient.setApiKey(apiKey)
 
-          // Validate the key
+          // Validate the key - response is the admin directly
           const response = await apiClient.validateApiKey()
 
           set({
             apiKey,
-            admin: response.admin,
+            admin: {
+              id: response.id,
+              email: response.email,
+              name: response.name,
+              role: response.role as 'super_admin' | 'ops_admin' | 'viewer',
+              is_active: true,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            },
             isAuthenticated: true,
             isLoading: false,
             error: null,
@@ -97,7 +105,15 @@ export const useAuthStore = create<AuthState>()(
           const response = await apiClient.validateApiKey()
 
           set({
-            admin: response.admin,
+            admin: {
+              id: response.id,
+              email: response.email,
+              name: response.name,
+              role: response.role as 'super_admin' | 'ops_admin' | 'viewer',
+              is_active: true,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            },
             isAuthenticated: true,
             isLoading: false,
           })

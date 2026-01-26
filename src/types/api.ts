@@ -3,26 +3,26 @@
 // =============================================================================
 
 // Agent types
-export type AgentStatus = 'online' | 'offline' | 'draining' | 'unhealthy'
+// Backend status: active, disabled, revoked
+// Backend health: online, offline, unknown
+export type AgentStatus = 'active' | 'disabled' | 'revoked'
+export type AgentHealth = 'online' | 'offline' | 'unknown'
 
 export interface Agent {
   id: string
   name: string
+  type: string
+  description?: string
   status: AgentStatus
-  region: string
+  health: AgentHealth
+  region?: string
   capabilities: string[]
   tools: string[]
-  version: string
-  current_jobs: number
-  max_concurrent_jobs: number
-  total_jobs_completed: number
-  total_jobs_failed: number
-  cpu_usage: number
-  memory_usage: number
-  disk_usage: number
-  last_heartbeat_at: string
-  lease_expires_at: string
-  registered_at: string
+  version?: string
+  max_concurrent_jobs?: number
+  last_heartbeat_at?: string
+  lease_expires_at?: string
+  registered_at?: string
   created_at: string
   updated_at: string
 }
@@ -94,23 +94,23 @@ export interface Admin {
 
 // Platform stats
 export interface PlatformStats {
-  total_agents: number
-  online_agents: number
-  offline_agents: number
-  draining_agents: number
-  unhealthy_agents: number
-
-  total_jobs_today: number
-  pending_jobs: number
-  running_jobs: number
-  completed_jobs_today: number
-  failed_jobs_today: number
-
-  avg_job_duration_seconds: number
-  jobs_per_minute: number
-
-  active_tenants_today: number
-  total_tenants_using_platform: number
+  agents: {
+    total: number
+    online: number
+    offline: number
+    draining: number // maps to disabled
+  }
+  jobs: {
+    queued: number
+    running: number
+    completed_24h: number
+    failed_24h: number
+  }
+  tokens: {
+    active: number
+    expired: number
+    revoked: number
+  }
 }
 
 // API responses
@@ -169,8 +169,10 @@ export interface AuditLog {
 
 // Auth
 export interface AuthResponse {
-  admin: Admin
-  expires_at: string
+  id: string
+  email: string
+  name: string
+  role: string
 }
 
 export interface LoginRequest {
