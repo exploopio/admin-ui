@@ -1,0 +1,26 @@
+# ==============================================================================
+# Docker Compose - Admin UI Production
+# ==============================================================================
+# Build and run production image:
+#   docker-compose -f docker-compose.prod.yml up --build
+# ==============================================================================
+
+services:
+  admin-ui:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: production
+      args:
+        - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8080}
+    ports:
+      - "3001:3000"
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
