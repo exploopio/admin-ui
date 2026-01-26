@@ -1,7 +1,7 @@
-"use client";
+'use client'
 
-import { useEffect, useState, useCallback } from "react";
-import Link from "next/link";
+import { useEffect, useState, useCallback } from 'react'
+import Link from 'next/link'
 import {
   ScrollText,
   RefreshCw,
@@ -13,14 +13,14 @@ import {
   Server,
   Settings,
   Eye,
-} from "lucide-react";
-import { formatDistanceToNow, format, subDays } from "date-fns";
+} from 'lucide-react'
+import { formatDistanceToNow, format, subDays } from 'date-fns'
 
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import {
   Table,
   TableBody,
@@ -28,14 +28,14 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from '@/components/ui/table'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from '@/components/ui/select'
 import {
   Sheet,
   SheetContent,
@@ -43,163 +43,144 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "@/components/ui/sheet";
+} from '@/components/ui/sheet'
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { apiClient } from "@/lib/api-client";
-import type { AuditLog, AuditAction, AuditActorType } from "@/types/api";
-import { toast } from "sonner";
+} from '@/components/ui/dialog'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { apiClient } from '@/lib/api-client'
+import type { AuditLog, AuditAction, AuditActorType } from '@/types/api'
+import { toast } from 'sonner'
 
 const actionCategories: Record<string, AuditAction[]> = {
-  Agent: [
-    "agent.register",
-    "agent.heartbeat",
-    "agent.drain",
-    "agent.uncordon",
-    "agent.delete",
-  ],
-  Job: [
-    "job.create",
-    "job.assign",
-    "job.complete",
-    "job.fail",
-    "job.cancel",
-    "job.timeout",
-  ],
-  Token: ["token.create", "token.use", "token.revoke"],
-  Admin: [
-    "admin.create",
-    "admin.update",
-    "admin.delete",
-    "admin.login",
-    "admin.rotate_key",
-  ],
-};
+  Agent: ['agent.register', 'agent.heartbeat', 'agent.drain', 'agent.uncordon', 'agent.delete'],
+  Job: ['job.create', 'job.assign', 'job.complete', 'job.fail', 'job.cancel', 'job.timeout'],
+  Token: ['token.create', 'token.use', 'token.revoke'],
+  Admin: ['admin.create', 'admin.update', 'admin.delete', 'admin.login', 'admin.rotate_key'],
+}
 
 export default function AuditLogsPage() {
-  const [logs, setLogs] = useState<AuditLog[]>([]);
-  const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(1);
-  const [perPage] = useState(30);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [logs, setLogs] = useState<AuditLog[]>([])
+  const [total, setTotal] = useState(0)
+  const [page, setPage] = useState(1)
+  const [perPage] = useState(30)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isRefreshing, setIsRefreshing] = useState(false)
 
   // Filters
-  const [actionFilter, setActionFilter] = useState<string>("all");
-  const [actorTypeFilter, setActorTypeFilter] = useState<string>("all");
-  const [resourceTypeFilter, setResourceTypeFilter] = useState<string>("all");
-  const [dateRange, setDateRange] = useState<string>("7d");
+  const [actionFilter, setActionFilter] = useState<string>('all')
+  const [actorTypeFilter, setActorTypeFilter] = useState<string>('all')
+  const [resourceTypeFilter, setResourceTypeFilter] = useState<string>('all')
+  const [dateRange, setDateRange] = useState<string>('7d')
 
   // Detail dialog
-  const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null);
+  const [selectedLog, setSelectedLog] = useState<AuditLog | null>(null)
 
   const getDateRange = useCallback(() => {
-    const now = new Date();
+    const now = new Date()
     switch (dateRange) {
-      case "1d":
-        return { from: subDays(now, 1).toISOString() };
-      case "7d":
-        return { from: subDays(now, 7).toISOString() };
-      case "30d":
-        return { from: subDays(now, 30).toISOString() };
-      case "90d":
-        return { from: subDays(now, 90).toISOString() };
+      case '1d':
+        return { from: subDays(now, 1).toISOString() }
+      case '7d':
+        return { from: subDays(now, 7).toISOString() }
+      case '30d':
+        return { from: subDays(now, 30).toISOString() }
+      case '90d':
+        return { from: subDays(now, 90).toISOString() }
       default:
-        return {};
+        return {}
     }
-  }, [dateRange]);
+  }, [dateRange])
 
   const fetchLogs = useCallback(async () => {
     try {
-      const dateParams = getDateRange();
+      const dateParams = getDateRange()
       const params: {
-        action?: AuditAction;
-        actor_type?: AuditActorType;
-        resource_type?: string;
-        from?: string;
-        page: number;
-        per_page: number;
+        action?: AuditAction
+        actor_type?: AuditActorType
+        resource_type?: string
+        from?: string
+        page: number
+        per_page: number
       } = {
         page,
         per_page: perPage,
         ...dateParams,
-      };
+      }
 
-      if (actionFilter !== "all") params.action = actionFilter as AuditAction;
-      if (actorTypeFilter !== "all") params.actor_type = actorTypeFilter as AuditActorType;
-      if (resourceTypeFilter !== "all") params.resource_type = resourceTypeFilter;
+      if (actionFilter !== 'all') params.action = actionFilter as AuditAction
+      if (actorTypeFilter !== 'all') params.actor_type = actorTypeFilter as AuditActorType
+      if (resourceTypeFilter !== 'all') params.resource_type = resourceTypeFilter
 
-      const response = await apiClient.listAuditLogs(params);
-      setLogs(response.data);
-      setTotal(response.total);
+      const response = await apiClient.listAuditLogs(params)
+      setLogs(response.data)
+      setTotal(response.total)
     } catch (error) {
-      console.error("Failed to fetch audit logs:", error);
-      toast.error("Failed to fetch audit logs");
+      console.error('Failed to fetch audit logs:', error)
+      toast.error('Failed to fetch audit logs')
     } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
+      setIsLoading(false)
+      setIsRefreshing(false)
     }
-  }, [page, perPage, actionFilter, actorTypeFilter, resourceTypeFilter, getDateRange]);
+  }, [page, perPage, actionFilter, actorTypeFilter, resourceTypeFilter, getDateRange])
 
   useEffect(() => {
-    fetchLogs();
-  }, [fetchLogs]);
+    fetchLogs()
+  }, [fetchLogs])
 
   const handleRefresh = () => {
-    setIsRefreshing(true);
-    fetchLogs();
-  };
+    setIsRefreshing(true)
+    fetchLogs()
+  }
 
   const clearFilters = () => {
-    setActionFilter("all");
-    setActorTypeFilter("all");
-    setResourceTypeFilter("all");
-    setDateRange("7d");
-    setPage(1);
-  };
+    setActionFilter('all')
+    setActorTypeFilter('all')
+    setResourceTypeFilter('all')
+    setDateRange('7d')
+    setPage(1)
+  }
 
   const hasActiveFilters =
-    actionFilter !== "all" ||
-    actorTypeFilter !== "all" ||
-    resourceTypeFilter !== "all" ||
-    dateRange !== "7d";
+    actionFilter !== 'all' ||
+    actorTypeFilter !== 'all' ||
+    resourceTypeFilter !== 'all' ||
+    dateRange !== '7d'
 
   const getActionBadge = (action: AuditAction) => {
-    const [category, type] = action.split(".");
+    const [category, type] = action.split('.')
     const colorMap: Record<string, string> = {
-      agent: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
-      job: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
-      token: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
-      admin: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
-    };
+      agent: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+      job: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',
+      token: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
+      admin: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
+    }
     return (
-      <Badge variant="outline" className={`${colorMap[category] || ""} border-0`}>
+      <Badge variant="outline" className={`${colorMap[category] || ''} border-0`}>
         {action}
       </Badge>
-    );
-  };
+    )
+  }
 
   const getActorIcon = (actorType: AuditActorType) => {
     switch (actorType) {
-      case "admin":
-        return <User className="h-4 w-4" />;
-      case "agent":
-        return <Server className="h-4 w-4" />;
-      case "system":
-        return <Settings className="h-4 w-4" />;
+      case 'admin':
+        return <User className="h-4 w-4" />
+      case 'agent':
+        return <Server className="h-4 w-4" />
+      case 'system':
+        return <Settings className="h-4 w-4" />
     }
-  };
+  }
 
-  const totalPages = Math.ceil(total / perPage);
+  const totalPages = Math.ceil(total / perPage)
 
   if (isLoading) {
-    return <AuditLogsPageSkeleton />;
+    return <AuditLogsPageSkeleton />
   }
 
   return (
@@ -208,18 +189,11 @@ export default function AuditLogsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Audit Logs</h1>
-          <p className="text-muted-foreground">
-            Track all platform activities and changes
-          </p>
+          <p className="text-muted-foreground">Track all platform activities and changes</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleRefresh}
-            disabled={isRefreshing}
-          >
-            <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
+          <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isRefreshing}>
+            <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
           <Sheet>
@@ -314,11 +288,7 @@ export default function AuditLogsPage() {
                 </div>
 
                 {hasActiveFilters && (
-                  <Button
-                    variant="outline"
-                    className="w-full"
-                    onClick={clearFilters}
-                  >
+                  <Button variant="outline" className="w-full" onClick={clearFilters}>
                     <X className="mr-2 h-4 w-4" />
                     Clear Filters
                   </Button>
@@ -333,24 +303,20 @@ export default function AuditLogsPage() {
       {hasActiveFilters && (
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-sm text-muted-foreground">Active filters:</span>
-          {dateRange !== "7d" && (
+          {dateRange !== '7d' && (
             <Badge variant="secondary">
-              {dateRange === "1d"
-                ? "Last 24h"
-                : dateRange === "30d"
-                ? "Last 30d"
-                : dateRange === "90d"
-                ? "Last 90d"
-                : "All time"}
+              {dateRange === '1d'
+                ? 'Last 24h'
+                : dateRange === '30d'
+                  ? 'Last 30d'
+                  : dateRange === '90d'
+                    ? 'Last 90d'
+                    : 'All time'}
             </Badge>
           )}
-          {actionFilter !== "all" && (
-            <Badge variant="secondary">{actionFilter}</Badge>
-          )}
-          {actorTypeFilter !== "all" && (
-            <Badge variant="secondary">Actor: {actorTypeFilter}</Badge>
-          )}
-          {resourceTypeFilter !== "all" && (
+          {actionFilter !== 'all' && <Badge variant="secondary">{actionFilter}</Badge>}
+          {actorTypeFilter !== 'all' && <Badge variant="secondary">Actor: {actorTypeFilter}</Badge>}
+          {resourceTypeFilter !== 'all' && (
             <Badge variant="secondary">Resource: {resourceTypeFilter}</Badge>
           )}
           <Button variant="ghost" size="sm" onClick={clearFilters}>
@@ -396,7 +362,7 @@ export default function AuditLogsPage() {
                         })}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {format(new Date(log.created_at), "MMM d, HH:mm:ss")}
+                        {format(new Date(log.created_at), 'MMM d, HH:mm:ss')}
                       </p>
                     </div>
                   </TableCell>
@@ -408,33 +374,23 @@ export default function AuditLogsPage() {
                         <p className="text-sm font-medium">
                           {log.actor_name || log.actor_id.slice(0, 8)}
                         </p>
-                        <p className="text-xs text-muted-foreground capitalize">
-                          {log.actor_type}
-                        </p>
+                        <p className="text-xs text-muted-foreground capitalize">{log.actor_type}</p>
                       </div>
                     </div>
                   </TableCell>
                   <TableCell>
                     <div>
-                      <p className="text-sm">
-                        {log.resource_name || log.resource_id.slice(0, 8)}
-                      </p>
+                      <p className="text-sm">{log.resource_name || log.resource_id.slice(0, 8)}</p>
                       <p className="text-xs text-muted-foreground capitalize">
                         {log.resource_type}
                       </p>
                     </div>
                   </TableCell>
                   <TableCell>
-                    <span className="text-sm font-mono">
-                      {log.ip_address || "-"}
-                    </span>
+                    <span className="text-sm font-mono">{log.ip_address || '-'}</span>
                   </TableCell>
                   <TableCell>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => setSelectedLog(log)}
-                    >
+                    <Button variant="ghost" size="icon" onClick={() => setSelectedLog(log)}>
                       <Eye className="h-4 w-4" />
                     </Button>
                   </TableCell>
@@ -478,8 +434,7 @@ export default function AuditLogsPage() {
           <DialogHeader>
             <DialogTitle>Audit Log Details</DialogTitle>
             <DialogDescription>
-              {selectedLog &&
-                format(new Date(selectedLog.created_at), "PPpp")}
+              {selectedLog && format(new Date(selectedLog.created_at), 'PPpp')}
             </DialogDescription>
           </DialogHeader>
           {selectedLog && (
@@ -489,9 +444,7 @@ export default function AuditLogsPage() {
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm">Action</CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    {getActionBadge(selectedLog.action)}
-                  </CardContent>
+                  <CardContent>{getActionBadge(selectedLog.action)}</CardContent>
                 </Card>
                 <Card>
                   <CardHeader className="pb-2">
@@ -545,33 +498,28 @@ export default function AuditLogsPage() {
                   <dl className="grid grid-cols-2 gap-2 text-sm">
                     <div>
                       <dt className="text-muted-foreground">IP Address</dt>
-                      <dd className="font-mono">
-                        {selectedLog.ip_address || "N/A"}
-                      </dd>
+                      <dd className="font-mono">{selectedLog.ip_address || 'N/A'}</dd>
                     </div>
                     <div>
                       <dt className="text-muted-foreground">User Agent</dt>
-                      <dd className="truncate text-xs">
-                        {selectedLog.user_agent || "N/A"}
-                      </dd>
+                      <dd className="truncate text-xs">{selectedLog.user_agent || 'N/A'}</dd>
                     </div>
                   </dl>
                 </CardContent>
               </Card>
 
-              {selectedLog.details &&
-                Object.keys(selectedLog.details).length > 0 && (
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-sm">Details</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <pre className="text-xs bg-muted p-3 rounded-md overflow-x-auto">
-                        {JSON.stringify(selectedLog.details, null, 2)}
-                      </pre>
-                    </CardContent>
-                  </Card>
-                )}
+              {selectedLog.details && Object.keys(selectedLog.details).length > 0 && (
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm">Details</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <pre className="text-xs bg-muted p-3 rounded-md overflow-x-auto">
+                      {JSON.stringify(selectedLog.details, null, 2)}
+                    </pre>
+                  </CardContent>
+                </Card>
+              )}
 
               <div className="text-xs text-muted-foreground">
                 Log ID: <span className="font-mono">{selectedLog.id}</span>
@@ -581,7 +529,7 @@ export default function AuditLogsPage() {
         </DialogContent>
       </Dialog>
     </div>
-  );
+  )
 }
 
 function AuditLogsPageSkeleton() {
@@ -599,5 +547,5 @@ function AuditLogsPageSkeleton() {
         </div>
       </div>
     </div>
-  );
+  )
 }

@@ -1,8 +1,8 @@
-"use client";
+'use client'
 
-import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
-import Link from "next/link";
+import { useEffect, useState } from 'react'
+import { useParams, useRouter } from 'next/navigation'
+import Link from 'next/link'
 import {
   ArrowLeft,
   Server,
@@ -15,13 +15,13 @@ import {
   Play,
   Trash2,
   RefreshCw,
-} from "lucide-react";
-import { formatDistanceToNow, format } from "date-fns";
+} from 'lucide-react'
+import { formatDistanceToNow, format } from 'date-fns'
 
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   Dialog,
   DialogContent,
@@ -29,89 +29,89 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Separator } from "@/components/ui/separator";
-import { apiClient } from "@/lib/api-client";
-import type { Agent, AgentStatus } from "@/types/api";
-import { toast } from "sonner";
+} from '@/components/ui/dialog'
+import { Separator } from '@/components/ui/separator'
+import { apiClient } from '@/lib/api-client'
+import type { Agent, AgentStatus } from '@/types/api'
+import { toast } from 'sonner'
 
 export default function AgentDetailPage() {
-  const params = useParams();
-  const router = useRouter();
-  const agentId = params.id as string;
+  const params = useParams()
+  const router = useRouter()
+  const agentId = params.id as string
 
-  const [agent, setAgent] = useState<Agent | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [agent, setAgent] = useState<Agent | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 
   const fetchAgent = async () => {
     try {
-      const data = await apiClient.getAgent(agentId);
-      setAgent(data);
+      const data = await apiClient.getAgent(agentId)
+      setAgent(data)
     } catch (error) {
-      console.error("Failed to fetch agent:", error);
-      toast.error("Failed to fetch agent details");
+      console.error('Failed to fetch agent:', error)
+      toast.error('Failed to fetch agent details')
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   useEffect(() => {
-    fetchAgent();
-  }, [agentId]);
+    fetchAgent()
+  }, [agentId])
 
   const handleDrain = async () => {
-    if (!agent) return;
+    if (!agent) return
     try {
-      await apiClient.drainAgent(agent.id);
-      toast.success(`Agent ${agent.name} is now draining`);
-      fetchAgent();
+      await apiClient.drainAgent(agent.id)
+      toast.success(`Agent ${agent.name} is now draining`)
+      fetchAgent()
     } catch (error) {
-      console.error("Failed to drain agent:", error);
-      toast.error("Failed to drain agent");
+      console.error('Failed to drain agent:', error)
+      toast.error('Failed to drain agent')
     }
-  };
+  }
 
   const handleUncordon = async () => {
-    if (!agent) return;
+    if (!agent) return
     try {
-      await apiClient.uncordonAgent(agent.id);
-      toast.success(`Agent ${agent.name} is now online`);
-      fetchAgent();
+      await apiClient.uncordonAgent(agent.id)
+      toast.success(`Agent ${agent.name} is now online`)
+      fetchAgent()
     } catch (error) {
-      console.error("Failed to uncordon agent:", error);
-      toast.error("Failed to uncordon agent");
+      console.error('Failed to uncordon agent:', error)
+      toast.error('Failed to uncordon agent')
     }
-  };
+  }
 
   const handleDelete = async () => {
-    if (!agent) return;
+    if (!agent) return
     try {
-      await apiClient.deleteAgent(agent.id);
-      toast.success(`Agent ${agent.name} deleted`);
-      router.push("/agents");
+      await apiClient.deleteAgent(agent.id)
+      toast.success(`Agent ${agent.name} deleted`)
+      router.push('/agents')
     } catch (error) {
-      console.error("Failed to delete agent:", error);
-      toast.error("Failed to delete agent");
+      console.error('Failed to delete agent:', error)
+      toast.error('Failed to delete agent')
     }
-  };
+  }
 
   const getStatusBadge = (status: AgentStatus) => {
-    const variants: Record<AgentStatus, "default" | "secondary" | "destructive" | "outline"> = {
-      online: "default",
-      offline: "secondary",
-      draining: "outline",
-      unhealthy: "destructive",
-    };
+    const variants: Record<AgentStatus, 'default' | 'secondary' | 'destructive' | 'outline'> = {
+      online: 'default',
+      offline: 'secondary',
+      draining: 'outline',
+      unhealthy: 'destructive',
+    }
     return (
       <Badge variant={variants[status]} className="capitalize text-base px-3 py-1">
         {status}
       </Badge>
-    );
-  };
+    )
+  }
 
   if (isLoading) {
-    return <AgentDetailSkeleton />;
+    return <AgentDetailSkeleton />
   }
 
   if (!agent) {
@@ -129,7 +129,7 @@ export default function AgentDetailPage() {
           </Link>
         </Button>
       </div>
-    );
+    )
   }
 
   return (
@@ -148,7 +148,7 @@ export default function AgentDetailPage() {
               {getStatusBadge(agent.status)}
             </div>
             <p className="text-muted-foreground">
-              Version {agent.version} | Region: {agent.region || "N/A"}
+              Version {agent.version} | Region: {agent.region || 'N/A'}
             </p>
           </div>
         </div>
@@ -157,22 +157,18 @@ export default function AgentDetailPage() {
             <RefreshCw className="mr-2 h-4 w-4" />
             Refresh
           </Button>
-          {agent.status === "online" ? (
+          {agent.status === 'online' ? (
             <Button variant="outline" size="sm" onClick={handleDrain}>
               <Pause className="mr-2 h-4 w-4" />
               Drain
             </Button>
-          ) : agent.status === "draining" ? (
+          ) : agent.status === 'draining' ? (
             <Button variant="outline" size="sm" onClick={handleUncordon}>
               <Play className="mr-2 h-4 w-4" />
               Uncordon
             </Button>
           ) : null}
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={() => setDeleteDialogOpen(true)}
-          >
+          <Button variant="destructive" size="sm" onClick={() => setDeleteDialogOpen(true)}>
             <Trash2 className="mr-2 h-4 w-4" />
             Delete
           </Button>
@@ -201,9 +197,7 @@ export default function AgentDetailPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{agent.total_jobs_completed}</div>
-            <p className="text-xs text-muted-foreground">
-              {agent.total_jobs_failed} failed
-            </p>
+            <p className="text-xs text-muted-foreground">{agent.total_jobs_failed} failed</p>
           </CardContent>
         </Card>
 
@@ -218,15 +212,15 @@ export default function AgentDetailPage() {
                 ? formatDistanceToNow(new Date(agent.last_heartbeat_at), {
                     addSuffix: true,
                   })
-                : "Never"}
+                : 'Never'}
             </div>
             <p className="text-xs text-muted-foreground">
-              Lease expires{" "}
+              Lease expires{' '}
               {agent.lease_expires_at
                 ? formatDistanceToNow(new Date(agent.lease_expires_at), {
                     addSuffix: true,
                   })
-                : "N/A"}
+                : 'N/A'}
             </p>
           </CardContent>
         </Card>
@@ -242,12 +236,10 @@ export default function AgentDetailPage() {
                 ? formatDistanceToNow(new Date(agent.registered_at), {
                     addSuffix: true,
                   })
-                : "N/A"}
+                : 'N/A'}
             </div>
             <p className="text-xs text-muted-foreground">
-              {agent.registered_at
-                ? format(new Date(agent.registered_at), "PPP")
-                : "N/A"}
+              {agent.registered_at ? format(new Date(agent.registered_at), 'PPP') : 'N/A'}
             </p>
           </CardContent>
         </Card>
@@ -272,9 +264,7 @@ export default function AgentDetailPage() {
                     style={{ width: `${agent.cpu_usage}%` }}
                   />
                 </div>
-                <span className="text-sm font-medium w-12 text-right">
-                  {agent.cpu_usage}%
-                </span>
+                <span className="text-sm font-medium w-12 text-right">{agent.cpu_usage}%</span>
               </div>
             </div>
 
@@ -290,9 +280,7 @@ export default function AgentDetailPage() {
                     style={{ width: `${agent.memory_usage}%` }}
                   />
                 </div>
-                <span className="text-sm font-medium w-12 text-right">
-                  {agent.memory_usage}%
-                </span>
+                <span className="text-sm font-medium w-12 text-right">{agent.memory_usage}%</span>
               </div>
             </div>
 
@@ -308,9 +296,7 @@ export default function AgentDetailPage() {
                     style={{ width: `${agent.disk_usage}%` }}
                   />
                 </div>
-                <span className="text-sm font-medium w-12 text-right">
-                  {agent.disk_usage}%
-                </span>
+                <span className="text-sm font-medium w-12 text-right">{agent.disk_usage}%</span>
               </div>
             </div>
           </div>
@@ -379,23 +365,15 @@ export default function AgentDetailPage() {
             </div>
             <div>
               <dt className="text-muted-foreground">Region</dt>
-              <dd>{agent.region || "N/A"}</dd>
+              <dd>{agent.region || 'N/A'}</dd>
             </div>
             <div>
               <dt className="text-muted-foreground">Created At</dt>
-              <dd>
-                {agent.created_at
-                  ? format(new Date(agent.created_at), "PPpp")
-                  : "N/A"}
-              </dd>
+              <dd>{agent.created_at ? format(new Date(agent.created_at), 'PPpp') : 'N/A'}</dd>
             </div>
             <div>
               <dt className="text-muted-foreground">Updated At</dt>
-              <dd>
-                {agent.updated_at
-                  ? format(new Date(agent.updated_at), "PPpp")
-                  : "N/A"}
-              </dd>
+              <dd>{agent.updated_at ? format(new Date(agent.updated_at), 'PPpp') : 'N/A'}</dd>
             </div>
           </dl>
         </CardContent>
@@ -407,9 +385,8 @@ export default function AgentDetailPage() {
           <DialogHeader>
             <DialogTitle>Delete Agent</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete agent{" "}
-              <span className="font-medium">{agent.name}</span>? This action
-              cannot be undone.
+              Are you sure you want to delete agent{' '}
+              <span className="font-medium">{agent.name}</span>? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -423,7 +400,7 @@ export default function AgentDetailPage() {
         </DialogContent>
       </Dialog>
     </div>
-  );
+  )
 }
 
 function AgentDetailSkeleton() {
@@ -462,5 +439,5 @@ function AgentDetailSkeleton() {
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }

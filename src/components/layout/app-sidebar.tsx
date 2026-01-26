@@ -1,7 +1,7 @@
-"use client";
+'use client'
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import {
   Shield,
   LayoutDashboard,
@@ -12,7 +12,7 @@ import {
   Settings,
   LogOut,
   ScrollText,
-} from "lucide-react";
+} from 'lucide-react'
 
 import {
   Sidebar,
@@ -26,62 +26,62 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarSeparator,
-} from "@/components/ui/sidebar";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+} from '@/components/ui/sidebar'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { useAuthStore } from "@/stores/auth-store";
+} from '@/components/ui/dropdown-menu'
+import { useAuthStore } from '@/stores/auth-store'
 
 const menuItems = [
   {
-    title: "Dashboard",
-    href: "/",
+    title: 'Dashboard',
+    href: '/',
     icon: LayoutDashboard,
   },
   {
-    title: "Agents",
-    href: "/agents",
+    title: 'Agents',
+    href: '/agents',
     icon: Server,
   },
   {
-    title: "Jobs",
-    href: "/jobs",
+    title: 'Jobs',
+    href: '/jobs',
     icon: ListTodo,
   },
   {
-    title: "Tokens",
-    href: "/tokens",
+    title: 'Tokens',
+    href: '/tokens',
     icon: Key,
   },
   {
-    title: "Audit Logs",
-    href: "/audit-logs",
+    title: 'Audit Logs',
+    href: '/audit-logs',
     icon: ScrollText,
   },
   {
-    title: "Admins",
-    href: "/admins",
+    title: 'Admins',
+    href: '/admins',
     icon: Users,
   },
-];
+]
 
 export function AppSidebar() {
-  const pathname = usePathname();
-  const { admin, logout } = useAuthStore();
+  const pathname = usePathname()
+  const { admin, logout } = useAuthStore()
 
   const getInitials = (name: string) => {
     return name
-      .split(" ")
+      .split(' ')
       .map((n) => n[0])
-      .join("")
+      .join('')
       .toUpperCase()
-      .slice(0, 2);
-  };
+      .slice(0, 2)
+  }
 
   return (
     <Sidebar>
@@ -112,11 +112,7 @@ export function AppSidebar() {
                 <SidebarMenuItem key={item.href}>
                   <SidebarMenuButton
                     asChild
-                    isActive={
-                      item.href === "/"
-                        ? pathname === "/"
-                        : pathname.startsWith(item.href)
-                    }
+                    isActive={item.href === '/' ? pathname === '/' : pathname.startsWith(item.href)}
                   >
                     <Link href={item.href}>
                       <item.icon className="size-4" />
@@ -142,15 +138,13 @@ export function AppSidebar() {
                 >
                   <Avatar className="h-8 w-8 rounded-lg">
                     <AvatarFallback className="rounded-lg">
-                      {admin?.name ? getInitials(admin.name) : "AD"}
+                      {admin?.name ? getInitials(admin.name) : 'AD'}
                     </AvatarFallback>
                   </Avatar>
                   <div className="grid flex-1 text-left text-sm leading-tight">
-                    <span className="truncate font-semibold">
-                      {admin?.name || "Admin"}
-                    </span>
+                    <span className="truncate font-semibold">{admin?.name || 'Admin'}</span>
                     <span className="truncate text-xs text-muted-foreground">
-                      {admin?.email || "admin@example.com"}
+                      {admin?.email || 'admin@example.com'}
                     </span>
                   </div>
                 </SidebarMenuButton>
@@ -162,7 +156,8 @@ export function AppSidebar() {
                 sideOffset={4}
               >
                 <div className="px-2 py-1.5 text-xs text-muted-foreground">
-                  Role: <span className="font-medium capitalize">{admin?.role?.replace("_", " ")}</span>
+                  Role:{' '}
+                  <span className="font-medium capitalize">{admin?.role?.replace('_', ' ')}</span>
                 </div>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
@@ -182,5 +177,5 @@ export function AppSidebar() {
         </SidebarMenu>
       </SidebarFooter>
     </Sidebar>
-  );
+  )
 }

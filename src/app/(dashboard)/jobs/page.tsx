@@ -1,7 +1,7 @@
-"use client";
+'use client'
 
-import { useEffect, useState, useCallback } from "react";
-import Link from "next/link";
+import { useEffect, useState, useCallback } from 'react'
+import Link from 'next/link'
 import {
   ListTodo,
   RefreshCw,
@@ -11,12 +11,12 @@ import {
   Eye,
   ChevronLeft,
   ChevronRight,
-} from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
+} from 'lucide-react'
+import { formatDistanceToNow } from 'date-fns'
 
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   Table,
   TableBody,
@@ -24,111 +24,114 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from '@/components/ui/table'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from '@/components/ui/dropdown-menu'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { apiClient } from "@/lib/api-client";
-import type { Job, JobStatus } from "@/types/api";
-import { toast } from "sonner";
+} from '@/components/ui/select'
+import { apiClient } from '@/lib/api-client'
+import type { Job, JobStatus } from '@/types/api'
+import { toast } from 'sonner'
 
 export default function JobsPage() {
-  const [jobs, setJobs] = useState<Job[]>([]);
-  const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(1);
-  const [perPage] = useState(20);
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [jobs, setJobs] = useState<Job[]>([])
+  const [total, setTotal] = useState(0)
+  const [page, setPage] = useState(1)
+  const [perPage] = useState(20)
+  const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [isLoading, setIsLoading] = useState(true)
+  const [isRefreshing, setIsRefreshing] = useState(false)
 
   const fetchJobs = useCallback(async () => {
     try {
       const params: { status?: string; page: number; per_page: number } = {
         page,
         per_page: perPage,
-      };
-      if (statusFilter !== "all") params.status = statusFilter;
+      }
+      if (statusFilter !== 'all') params.status = statusFilter
 
-      const response = await apiClient.listJobs(params);
-      setJobs(response.data);
-      setTotal(response.total);
+      const response = await apiClient.listJobs(params)
+      setJobs(response.data)
+      setTotal(response.total)
     } catch (error) {
-      console.error("Failed to fetch jobs:", error);
-      toast.error("Failed to fetch jobs");
+      console.error('Failed to fetch jobs:', error)
+      toast.error('Failed to fetch jobs')
     } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
+      setIsLoading(false)
+      setIsRefreshing(false)
     }
-  }, [page, perPage, statusFilter]);
+  }, [page, perPage, statusFilter])
 
   useEffect(() => {
-    fetchJobs();
+    fetchJobs()
     // Auto-refresh every 10 seconds for jobs
-    const interval = setInterval(fetchJobs, 10000);
-    return () => clearInterval(interval);
-  }, [fetchJobs]);
+    const interval = setInterval(fetchJobs, 10000)
+    return () => clearInterval(interval)
+  }, [fetchJobs])
 
   const handleRefresh = () => {
-    setIsRefreshing(true);
-    fetchJobs();
-  };
+    setIsRefreshing(true)
+    fetchJobs()
+  }
 
   const handleCancel = async (job: Job) => {
     try {
-      await apiClient.cancelJob(job.id);
-      toast.success("Job cancelled");
-      fetchJobs();
+      await apiClient.cancelJob(job.id)
+      toast.success('Job cancelled')
+      fetchJobs()
     } catch (error) {
-      console.error("Failed to cancel job:", error);
-      toast.error("Failed to cancel job");
+      console.error('Failed to cancel job:', error)
+      toast.error('Failed to cancel job')
     }
-  };
+  }
 
   const handleRetry = async (job: Job) => {
     try {
-      await apiClient.retryJob(job.id);
-      toast.success("Job queued for retry");
-      fetchJobs();
+      await apiClient.retryJob(job.id)
+      toast.success('Job queued for retry')
+      fetchJobs()
     } catch (error) {
-      console.error("Failed to retry job:", error);
-      toast.error("Failed to retry job");
+      console.error('Failed to retry job:', error)
+      toast.error('Failed to retry job')
     }
-  };
+  }
 
   const getStatusBadge = (status: JobStatus) => {
-    const config: Record<JobStatus, { variant: "default" | "secondary" | "destructive" | "outline"; className?: string }> = {
-      pending: { variant: "outline" },
-      queued: { variant: "outline", className: "border-yellow-500 text-yellow-600" },
-      assigned: { variant: "secondary" },
-      running: { variant: "default", className: "bg-blue-500" },
-      completed: { variant: "default", className: "bg-green-500" },
-      failed: { variant: "destructive" },
-      cancelled: { variant: "secondary" },
-      timeout: { variant: "destructive", className: "bg-orange-500" },
-    };
-    const { variant, className } = config[status];
+    const config: Record<
+      JobStatus,
+      { variant: 'default' | 'secondary' | 'destructive' | 'outline'; className?: string }
+    > = {
+      pending: { variant: 'outline' },
+      queued: { variant: 'outline', className: 'border-yellow-500 text-yellow-600' },
+      assigned: { variant: 'secondary' },
+      running: { variant: 'default', className: 'bg-blue-500' },
+      completed: { variant: 'default', className: 'bg-green-500' },
+      failed: { variant: 'destructive' },
+      cancelled: { variant: 'secondary' },
+      timeout: { variant: 'destructive', className: 'bg-orange-500' },
+    }
+    const { variant, className } = config[status]
     return (
-      <Badge variant={variant} className={`capitalize ${className || ""}`}>
+      <Badge variant={variant} className={`capitalize ${className || ''}`}>
         {status}
       </Badge>
-    );
-  };
+    )
+  }
 
-  const totalPages = Math.ceil(total / perPage);
+  const totalPages = Math.ceil(total / perPage)
 
   if (isLoading) {
-    return <JobsPageSkeleton />;
+    return <JobsPageSkeleton />
   }
 
   return (
@@ -137,17 +140,10 @@ export default function JobsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Jobs</h1>
-          <p className="text-muted-foreground">
-            Monitor and manage platform jobs
-          </p>
+          <p className="text-muted-foreground">Monitor and manage platform jobs</p>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleRefresh}
-          disabled={isRefreshing}
-        >
-          <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
+        <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isRefreshing}>
+          <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
           Refresh
         </Button>
       </div>
@@ -175,7 +171,7 @@ export default function JobsPage() {
         </div>
 
         <div className="ml-auto text-sm text-muted-foreground">
-          {total} job{total !== 1 ? "s" : ""}
+          {total} job{total !== 1 ? 's' : ''}
         </div>
       </div>
 
@@ -206,21 +202,16 @@ export default function JobsPage() {
               jobs.map((job) => (
                 <TableRow key={job.id}>
                   <TableCell>
-                    <Link
-                      href={`/jobs/${job.id}`}
-                      className="font-medium hover:underline"
-                    >
+                    <Link href={`/jobs/${job.id}`} className="font-medium hover:underline">
                       {job.scanner_name}
                     </Link>
                   </TableCell>
                   <TableCell>
-                    <span className="text-sm truncate max-w-[200px] block">
-                      {job.target}
-                    </span>
+                    <span className="text-sm truncate max-w-[200px] block">{job.target}</span>
                   </TableCell>
                   <TableCell>{getStatusBadge(job.status)}</TableCell>
                   <TableCell>
-                    {job.status === "running" ? (
+                    {job.status === 'running' ? (
                       <div className="flex items-center gap-2">
                         <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden max-w-[100px]">
                           <div
@@ -230,12 +221,12 @@ export default function JobsPage() {
                         </div>
                         <span className="text-xs">{job.progress}%</span>
                       </div>
-                    ) : job.status === "queued" && job.queue_position ? (
+                    ) : job.status === 'queued' && job.queue_position ? (
                       <span className="text-xs text-muted-foreground">
                         #{job.queue_position} in queue
                       </span>
                     ) : (
-                      "-"
+                      '-'
                     )}
                   </TableCell>
                   <TableCell>
@@ -271,9 +262,9 @@ export default function JobsPage() {
                             View Details
                           </Link>
                         </DropdownMenuItem>
-                        {(job.status === "pending" ||
-                          job.status === "queued" ||
-                          job.status === "running") && (
+                        {(job.status === 'pending' ||
+                          job.status === 'queued' ||
+                          job.status === 'running') && (
                           <>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
@@ -285,7 +276,7 @@ export default function JobsPage() {
                             </DropdownMenuItem>
                           </>
                         )}
-                        {(job.status === "failed" || job.status === "timeout") && (
+                        {(job.status === 'failed' || job.status === 'timeout') && (
                           <>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem onClick={() => handleRetry(job)}>
@@ -331,7 +322,7 @@ export default function JobsPage() {
         </div>
       )}
     </div>
-  );
+  )
 }
 
 function JobsPageSkeleton() {
@@ -352,5 +343,5 @@ function JobsPageSkeleton() {
         </div>
       </div>
     </div>
-  );
+  )
 }

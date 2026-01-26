@@ -1,7 +1,7 @@
-"use client";
+'use client'
 
-import { useEffect, useState, useCallback } from "react";
-import Link from "next/link";
+import { useEffect, useState, useCallback } from 'react'
+import Link from 'next/link'
 import {
   Server,
   RefreshCw,
@@ -12,12 +12,12 @@ import {
   Eye,
   ChevronLeft,
   ChevronRight,
-} from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
+} from 'lucide-react'
+import { formatDistanceToNow } from 'date-fns'
 
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   Table,
   TableBody,
@@ -25,21 +25,21 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from '@/components/ui/table'
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from '@/components/ui/dropdown-menu'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from '@/components/ui/select'
 import {
   Dialog,
   DialogContent,
@@ -47,114 +47,114 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { apiClient } from "@/lib/api-client";
-import type { Agent, AgentStatus } from "@/types/api";
-import { toast } from "sonner";
+} from '@/components/ui/dialog'
+import { apiClient } from '@/lib/api-client'
+import type { Agent, AgentStatus } from '@/types/api'
+import { toast } from 'sonner'
 
 export default function AgentsPage() {
-  const [agents, setAgents] = useState<Agent[]>([]);
-  const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(1);
-  const [perPage] = useState(20);
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [regionFilter, setRegionFilter] = useState<string>("all");
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [agents, setAgents] = useState<Agent[]>([])
+  const [total, setTotal] = useState(0)
+  const [page, setPage] = useState(1)
+  const [perPage] = useState(20)
+  const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [regionFilter, setRegionFilter] = useState<string>('all')
+  const [isLoading, setIsLoading] = useState(true)
+  const [isRefreshing, setIsRefreshing] = useState(false)
 
   // Delete confirmation dialog
   const [deleteDialog, setDeleteDialog] = useState<{
-    open: boolean;
-    agent: Agent | null;
-  }>({ open: false, agent: null });
+    open: boolean
+    agent: Agent | null
+  }>({ open: false, agent: null })
 
   const fetchAgents = useCallback(async () => {
     try {
       const params: { status?: string; region?: string; page: number; per_page: number } = {
         page,
         per_page: perPage,
-      };
-      if (statusFilter !== "all") params.status = statusFilter;
-      if (regionFilter !== "all") params.region = regionFilter;
+      }
+      if (statusFilter !== 'all') params.status = statusFilter
+      if (regionFilter !== 'all') params.region = regionFilter
 
-      const response = await apiClient.listAgents(params);
-      setAgents(response.data);
-      setTotal(response.total);
+      const response = await apiClient.listAgents(params)
+      setAgents(response.data)
+      setTotal(response.total)
     } catch (error) {
-      console.error("Failed to fetch agents:", error);
-      toast.error("Failed to fetch agents");
+      console.error('Failed to fetch agents:', error)
+      toast.error('Failed to fetch agents')
     } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
+      setIsLoading(false)
+      setIsRefreshing(false)
     }
-  }, [page, perPage, statusFilter, regionFilter]);
+  }, [page, perPage, statusFilter, regionFilter])
 
   useEffect(() => {
-    fetchAgents();
-  }, [fetchAgents]);
+    fetchAgents()
+  }, [fetchAgents])
 
   const handleRefresh = () => {
-    setIsRefreshing(true);
-    fetchAgents();
-  };
+    setIsRefreshing(true)
+    fetchAgents()
+  }
 
   const handleDrain = async (agent: Agent) => {
     try {
-      await apiClient.drainAgent(agent.id);
-      toast.success(`Agent ${agent.name} is now draining`);
-      fetchAgents();
+      await apiClient.drainAgent(agent.id)
+      toast.success(`Agent ${agent.name} is now draining`)
+      fetchAgents()
     } catch (error) {
-      console.error("Failed to drain agent:", error);
-      toast.error("Failed to drain agent");
+      console.error('Failed to drain agent:', error)
+      toast.error('Failed to drain agent')
     }
-  };
+  }
 
   const handleUncordon = async (agent: Agent) => {
     try {
-      await apiClient.uncordonAgent(agent.id);
-      toast.success(`Agent ${agent.name} is now online`);
-      fetchAgents();
+      await apiClient.uncordonAgent(agent.id)
+      toast.success(`Agent ${agent.name} is now online`)
+      fetchAgents()
     } catch (error) {
-      console.error("Failed to uncordon agent:", error);
-      toast.error("Failed to uncordon agent");
+      console.error('Failed to uncordon agent:', error)
+      toast.error('Failed to uncordon agent')
     }
-  };
+  }
 
   const handleDelete = async () => {
-    if (!deleteDialog.agent) return;
+    if (!deleteDialog.agent) return
 
     try {
-      await apiClient.deleteAgent(deleteDialog.agent.id);
-      toast.success(`Agent ${deleteDialog.agent.name} deleted`);
-      setDeleteDialog({ open: false, agent: null });
-      fetchAgents();
+      await apiClient.deleteAgent(deleteDialog.agent.id)
+      toast.success(`Agent ${deleteDialog.agent.name} deleted`)
+      setDeleteDialog({ open: false, agent: null })
+      fetchAgents()
     } catch (error) {
-      console.error("Failed to delete agent:", error);
-      toast.error("Failed to delete agent");
+      console.error('Failed to delete agent:', error)
+      toast.error('Failed to delete agent')
     }
-  };
+  }
 
   const getStatusBadge = (status: AgentStatus) => {
-    const variants: Record<AgentStatus, "default" | "secondary" | "destructive" | "outline"> = {
-      online: "default",
-      offline: "secondary",
-      draining: "outline",
-      unhealthy: "destructive",
-    };
+    const variants: Record<AgentStatus, 'default' | 'secondary' | 'destructive' | 'outline'> = {
+      online: 'default',
+      offline: 'secondary',
+      draining: 'outline',
+      unhealthy: 'destructive',
+    }
     return (
       <Badge variant={variants[status]} className="capitalize">
         {status}
       </Badge>
-    );
-  };
+    )
+  }
 
-  const totalPages = Math.ceil(total / perPage);
+  const totalPages = Math.ceil(total / perPage)
 
   // Get unique regions from agents for filter
-  const regions = [...new Set(agents.map((a) => a.region))].filter(Boolean);
+  const regions = [...new Set(agents.map((a) => a.region))].filter(Boolean)
 
   if (isLoading) {
-    return <AgentsPageSkeleton />;
+    return <AgentsPageSkeleton />
   }
 
   return (
@@ -163,17 +163,10 @@ export default function AgentsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Agents</h1>
-          <p className="text-muted-foreground">
-            Manage platform agents and their status
-          </p>
+          <p className="text-muted-foreground">Manage platform agents and their status</p>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleRefresh}
-          disabled={isRefreshing}
-        >
-          <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
+        <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isRefreshing}>
+          <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
           Refresh
         </Button>
       </div>
@@ -216,7 +209,7 @@ export default function AgentsPage() {
         )}
 
         <div className="ml-auto text-sm text-muted-foreground">
-          {total} agent{total !== 1 ? "s" : ""}
+          {total} agent{total !== 1 ? 's' : ''}
         </div>
       </div>
 
@@ -247,19 +240,14 @@ export default function AgentsPage() {
                 <TableRow key={agent.id}>
                   <TableCell>
                     <div>
-                      <Link
-                        href={`/agents/${agent.id}`}
-                        className="font-medium hover:underline"
-                      >
+                      <Link href={`/agents/${agent.id}`} className="font-medium hover:underline">
                         {agent.name}
                       </Link>
-                      <p className="text-xs text-muted-foreground">
-                        v{agent.version}
-                      </p>
+                      <p className="text-xs text-muted-foreground">v{agent.version}</p>
                     </div>
                   </TableCell>
                   <TableCell>{getStatusBadge(agent.status)}</TableCell>
-                  <TableCell>{agent.region || "-"}</TableCell>
+                  <TableCell>{agent.region || '-'}</TableCell>
                   <TableCell>
                     <span className="font-medium">{agent.current_jobs}</span>
                     <span className="text-muted-foreground">/{agent.max_concurrent_jobs}</span>
@@ -275,7 +263,7 @@ export default function AgentsPage() {
                       ? formatDistanceToNow(new Date(agent.last_heartbeat_at), {
                           addSuffix: true,
                         })
-                      : "-"}
+                      : '-'}
                   </TableCell>
                   <TableCell>
                     <DropdownMenu>
@@ -292,12 +280,12 @@ export default function AgentsPage() {
                           </Link>
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        {agent.status === "online" ? (
+                        {agent.status === 'online' ? (
                           <DropdownMenuItem onClick={() => handleDrain(agent)}>
                             <Pause className="mr-2 h-4 w-4" />
                             Drain
                           </DropdownMenuItem>
-                        ) : agent.status === "draining" ? (
+                        ) : agent.status === 'draining' ? (
                           <DropdownMenuItem onClick={() => handleUncordon(agent)}>
                             <Play className="mr-2 h-4 w-4" />
                             Uncordon
@@ -357,16 +345,13 @@ export default function AgentsPage() {
           <DialogHeader>
             <DialogTitle>Delete Agent</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete agent{" "}
-              <span className="font-medium">{deleteDialog.agent?.name}</span>?
-              This action cannot be undone.
+              Are you sure you want to delete agent{' '}
+              <span className="font-medium">{deleteDialog.agent?.name}</span>? This action cannot be
+              undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setDeleteDialog({ open: false, agent: null })}
-            >
+            <Button variant="outline" onClick={() => setDeleteDialog({ open: false, agent: null })}>
               Cancel
             </Button>
             <Button variant="destructive" onClick={handleDelete}>
@@ -376,7 +361,7 @@ export default function AgentsPage() {
         </DialogContent>
       </Dialog>
     </div>
-  );
+  )
 }
 
 function AgentsPageSkeleton() {
@@ -398,5 +383,5 @@ function AgentsPageSkeleton() {
         </div>
       </div>
     </div>
-  );
+  )
 }

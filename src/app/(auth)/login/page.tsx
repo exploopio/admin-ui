@@ -1,46 +1,40 @@
-"use client";
+'use client'
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { Shield, KeyRound, Loader2, AlertCircle } from "lucide-react";
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { Shield, KeyRound, Loader2, AlertCircle } from 'lucide-react'
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { useAuthStore } from "@/stores/auth-store";
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { useAuthStore } from '@/stores/auth-store'
 
 export default function LoginPage() {
-  const router = useRouter();
-  const { login, isAuthenticated, isLoading, error, clearError } = useAuthStore();
-  const [apiKey, setApiKey] = useState("");
+  const router = useRouter()
+  const { login, isAuthenticated, isLoading, error, clearError } = useAuthStore()
+  const [apiKey, setApiKey] = useState('')
 
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      router.push("/");
+      router.push('/')
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, router])
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    clearError();
+    e.preventDefault()
+    clearError()
 
     if (!apiKey.trim()) {
-      return;
+      return
     }
 
-    const success = await login(apiKey.trim());
+    const success = await login(apiKey.trim())
     if (success) {
-      router.push("/");
+      router.push('/')
     }
-  };
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
@@ -52,9 +46,7 @@ export default function LoginPage() {
             </div>
           </div>
           <CardTitle className="text-2xl">Rediver Admin</CardTitle>
-          <CardDescription>
-            Platform administration console
-          </CardDescription>
+          <CardDescription>Platform administration console</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -92,19 +84,19 @@ export default function LoginPage() {
                   Authenticating...
                 </>
               ) : (
-                "Sign In"
+                'Sign In'
               )}
             </Button>
           </form>
 
           <div className="mt-6 text-center text-sm text-muted-foreground">
             <p>
-              Don&apos;t have an API key?{" "}
+              Don&apos;t have an API key?{' '}
               <span className="text-primary">Contact your administrator</span>
             </p>
           </div>
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }

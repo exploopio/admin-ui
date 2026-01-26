@@ -1,12 +1,20 @@
 # ==============================================================================
 # Docker Compose - Admin UI Production
 # ==============================================================================
-# Build and run production image:
+# Option 1: Pull from Docker Hub (recommended for deployment):
+#   docker-compose -f docker-compose.prod.yml up -d
+#
+# Option 2: Build locally:
 #   docker-compose -f docker-compose.prod.yml up --build
+#
+# With specific version:
+#   ADMIN_UI_VERSION=v1.0.0 docker-compose -f docker-compose.prod.yml up -d
 # ==============================================================================
 
 services:
   admin-ui:
+    # Pull from Docker Hub by default, build locally if --build flag is used
+    image: rediverio/admin-ui:${ADMIN_UI_VERSION:-latest}
     build:
       context: .
       dockerfile: Dockerfile
@@ -14,7 +22,7 @@ services:
       args:
         - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8080}
     ports:
-      - "3001:3000"
+      - "${ADMIN_UI_PORT:-3001}:3000"
     environment:
       - NODE_ENV=production
     restart: unless-stopped
@@ -24,3 +32,16 @@ services:
       timeout: 10s
       retries: 3
       start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "100m"
+        max-file: "5"

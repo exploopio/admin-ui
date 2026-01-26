@@ -1,8 +1,8 @@
-"use client";
+'use client'
 
-import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
-import Link from "next/link";
+import { useEffect, useState } from 'react'
+import { useParams, useRouter } from 'next/navigation'
+import Link from 'next/link'
 import {
   ArrowLeft,
   ListTodo,
@@ -13,93 +13,96 @@ import {
   RefreshCw,
   Target,
   AlertCircle,
-} from "lucide-react";
-import { formatDistanceToNow, format } from "date-fns";
+} from 'lucide-react'
+import { formatDistanceToNow, format } from 'date-fns'
 
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { apiClient } from "@/lib/api-client";
-import type { Job, JobStatus } from "@/types/api";
-import { toast } from "sonner";
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { apiClient } from '@/lib/api-client'
+import type { Job, JobStatus } from '@/types/api'
+import { toast } from 'sonner'
 
 export default function JobDetailPage() {
-  const params = useParams();
-  const router = useRouter();
-  const jobId = params.id as string;
+  const params = useParams()
+  const router = useRouter()
+  const jobId = params.id as string
 
-  const [job, setJob] = useState<Job | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [job, setJob] = useState<Job | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
 
   const fetchJob = async () => {
     try {
-      const data = await apiClient.getJob(jobId);
-      setJob(data);
+      const data = await apiClient.getJob(jobId)
+      setJob(data)
     } catch (error) {
-      console.error("Failed to fetch job:", error);
-      toast.error("Failed to fetch job details");
+      console.error('Failed to fetch job:', error)
+      toast.error('Failed to fetch job details')
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   useEffect(() => {
-    fetchJob();
+    fetchJob()
     // Auto-refresh running jobs
     const interval = setInterval(() => {
-      if (job?.status === "running" || job?.status === "queued") {
-        fetchJob();
+      if (job?.status === 'running' || job?.status === 'queued') {
+        fetchJob()
       }
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [jobId, job?.status]);
+    }, 5000)
+    return () => clearInterval(interval)
+  }, [jobId, job?.status])
 
   const handleCancel = async () => {
-    if (!job) return;
+    if (!job) return
     try {
-      await apiClient.cancelJob(job.id);
-      toast.success("Job cancelled");
-      fetchJob();
+      await apiClient.cancelJob(job.id)
+      toast.success('Job cancelled')
+      fetchJob()
     } catch (error) {
-      console.error("Failed to cancel job:", error);
-      toast.error("Failed to cancel job");
+      console.error('Failed to cancel job:', error)
+      toast.error('Failed to cancel job')
     }
-  };
+  }
 
   const handleRetry = async () => {
-    if (!job) return;
+    if (!job) return
     try {
-      await apiClient.retryJob(job.id);
-      toast.success("Job queued for retry");
-      fetchJob();
+      await apiClient.retryJob(job.id)
+      toast.success('Job queued for retry')
+      fetchJob()
     } catch (error) {
-      console.error("Failed to retry job:", error);
-      toast.error("Failed to retry job");
+      console.error('Failed to retry job:', error)
+      toast.error('Failed to retry job')
     }
-  };
+  }
 
   const getStatusBadge = (status: JobStatus) => {
-    const config: Record<JobStatus, { variant: "default" | "secondary" | "destructive" | "outline"; className?: string }> = {
-      pending: { variant: "outline" },
-      queued: { variant: "outline", className: "border-yellow-500 text-yellow-600" },
-      assigned: { variant: "secondary" },
-      running: { variant: "default", className: "bg-blue-500" },
-      completed: { variant: "default", className: "bg-green-500" },
-      failed: { variant: "destructive" },
-      cancelled: { variant: "secondary" },
-      timeout: { variant: "destructive", className: "bg-orange-500" },
-    };
-    const { variant, className } = config[status];
+    const config: Record<
+      JobStatus,
+      { variant: 'default' | 'secondary' | 'destructive' | 'outline'; className?: string }
+    > = {
+      pending: { variant: 'outline' },
+      queued: { variant: 'outline', className: 'border-yellow-500 text-yellow-600' },
+      assigned: { variant: 'secondary' },
+      running: { variant: 'default', className: 'bg-blue-500' },
+      completed: { variant: 'default', className: 'bg-green-500' },
+      failed: { variant: 'destructive' },
+      cancelled: { variant: 'secondary' },
+      timeout: { variant: 'destructive', className: 'bg-orange-500' },
+    }
+    const { variant, className } = config[status]
     return (
-      <Badge variant={variant} className={`capitalize text-base px-3 py-1 ${className || ""}`}>
+      <Badge variant={variant} className={`capitalize text-base px-3 py-1 ${className || ''}`}>
         {status}
       </Badge>
-    );
-  };
+    )
+  }
 
   if (isLoading) {
-    return <JobDetailSkeleton />;
+    return <JobDetailSkeleton />
   }
 
   if (!job) {
@@ -117,11 +120,11 @@ export default function JobDetailPage() {
           </Link>
         </Button>
       </div>
-    );
+    )
   }
 
-  const canCancel = ["pending", "queued", "running"].includes(job.status);
-  const canRetry = ["failed", "timeout"].includes(job.status);
+  const canCancel = ['pending', 'queued', 'running'].includes(job.status)
+  const canRetry = ['failed', 'timeout'].includes(job.status)
 
   return (
     <div className="space-y-6">
@@ -135,14 +138,10 @@ export default function JobDetailPage() {
           </Button>
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-bold tracking-tight">
-                {job.scanner_name}
-              </h1>
+              <h1 className="text-3xl font-bold tracking-tight">{job.scanner_name}</h1>
               {getStatusBadge(job.status)}
             </div>
-            <p className="text-muted-foreground truncate max-w-lg">
-              {job.target}
-            </p>
+            <p className="text-muted-foreground truncate max-w-lg">{job.target}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -166,7 +165,7 @@ export default function JobDetailPage() {
       </div>
 
       {/* Progress (for running jobs) */}
-      {job.status === "running" && (
+      {job.status === 'running' && (
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">Progress</CardTitle>
@@ -179,25 +178,21 @@ export default function JobDetailPage() {
                   style={{ width: `${job.progress}%` }}
                 />
               </div>
-              <span className="text-lg font-medium w-16 text-right">
-                {job.progress}%
-              </span>
+              <span className="text-lg font-medium w-16 text-right">{job.progress}%</span>
             </div>
           </CardContent>
         </Card>
       )}
 
       {/* Queue Position (for queued jobs) */}
-      {job.status === "queued" && job.queue_position && (
+      {job.status === 'queued' && job.queue_position && (
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium">Queue Position</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold">#{job.queue_position}</div>
-            <p className="text-sm text-muted-foreground">
-              Waiting for an available agent
-            </p>
+            <p className="text-sm text-muted-foreground">Waiting for an available agent</p>
           </CardContent>
         </Card>
       )}
@@ -247,9 +242,7 @@ export default function JobDetailPage() {
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
-              {Math.round(job.timeout_seconds / 60)}m
-            </div>
+            <div className="text-2xl font-bold">{Math.round(job.timeout_seconds / 60)}m</div>
           </CardContent>
         </Card>
 
@@ -259,9 +252,7 @@ export default function JobDetailPage() {
             <Server className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold truncate">
-              {job.agent_name || "Not assigned"}
-            </div>
+            <div className="text-2xl font-bold truncate">{job.agent_name || 'Not assigned'}</div>
           </CardContent>
         </Card>
       </div>
@@ -275,9 +266,7 @@ export default function JobDetailPage() {
           <div className="grid gap-4 md:grid-cols-3">
             <div>
               <p className="text-sm text-muted-foreground">Created</p>
-              <p className="font-medium">
-                {format(new Date(job.created_at), "PPpp")}
-              </p>
+              <p className="font-medium">{format(new Date(job.created_at), 'PPpp')}</p>
               <p className="text-xs text-muted-foreground">
                 {formatDistanceToNow(new Date(job.created_at), {
                   addSuffix: true,
@@ -287,9 +276,7 @@ export default function JobDetailPage() {
             {job.started_at && (
               <div>
                 <p className="text-sm text-muted-foreground">Started</p>
-                <p className="font-medium">
-                  {format(new Date(job.started_at), "PPpp")}
-                </p>
+                <p className="font-medium">{format(new Date(job.started_at), 'PPpp')}</p>
                 <p className="text-xs text-muted-foreground">
                   {formatDistanceToNow(new Date(job.started_at), {
                     addSuffix: true,
@@ -300,15 +287,12 @@ export default function JobDetailPage() {
             {job.completed_at && (
               <div>
                 <p className="text-sm text-muted-foreground">Completed</p>
-                <p className="font-medium">
-                  {format(new Date(job.completed_at), "PPpp")}
-                </p>
+                <p className="font-medium">{format(new Date(job.completed_at), 'PPpp')}</p>
                 <p className="text-xs text-muted-foreground">
-                  Duration:{" "}
+                  Duration:{' '}
                   {job.started_at &&
                     Math.round(
-                      (new Date(job.completed_at).getTime() -
-                        new Date(job.started_at).getTime()) /
+                      (new Date(job.completed_at).getTime() - new Date(job.started_at).getTime()) /
                         1000
                     )}
                   s
@@ -357,10 +341,7 @@ export default function JobDetailPage() {
                 <div>
                   <dt className="text-muted-foreground">Agent Name</dt>
                   <dd>
-                    <Link
-                      href={`/agents/${job.agent_id}`}
-                      className="hover:underline text-primary"
-                    >
+                    <Link href={`/agents/${job.agent_id}`} className="hover:underline text-primary">
                       {job.agent_name}
                     </Link>
                   </dd>
@@ -371,7 +352,7 @@ export default function JobDetailPage() {
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }
 
 function JobDetailSkeleton() {
@@ -409,5 +390,5 @@ function JobDetailSkeleton() {
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }

@@ -1,15 +1,11 @@
-"use client";
+'use client'
 
-import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/layout/app-sidebar";
-import { AuthGuard } from "@/components/layout/auth-guard";
-import { Separator } from "@/components/ui/separator";
+import { SidebarProvider, SidebarTrigger, SidebarInset } from '@/components/ui/sidebar'
+import { AppSidebar } from '@/components/layout/app-sidebar'
+import { AuthGuard } from '@/components/layout/auth-guard'
+import { Separator } from '@/components/ui/separator'
 
-export default function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
     <AuthGuard>
       <SidebarProvider>
@@ -19,11 +15,9 @@ export default function DashboardLayout({
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="h-4" />
           </header>
-          <main className="flex-1 overflow-auto p-6">
-            {children}
-          </main>
+          <main className="flex-1 overflow-auto p-6">{children}</main>
         </SidebarInset>
       </SidebarProvider>
     </AuthGuard>
-  );
+  )
 }

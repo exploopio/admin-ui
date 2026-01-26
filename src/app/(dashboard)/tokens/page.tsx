@@ -1,6 +1,6 @@
-"use client";
+'use client'
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback } from 'react'
 import {
   Key,
   RefreshCw,
@@ -11,14 +11,14 @@ import {
   ChevronLeft,
   ChevronRight,
   AlertCircle,
-} from "lucide-react";
-import { formatDistanceToNow, format } from "date-fns";
+} from 'lucide-react'
+import { formatDistanceToNow, format } from 'date-fns'
 
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import {
   Table,
   TableBody,
@@ -26,7 +26,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from '@/components/ui/table'
 import {
   Dialog,
   DialogContent,
@@ -35,125 +35,125 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
+} from '@/components/ui/dialog'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Card, CardContent } from "@/components/ui/card";
-import { apiClient } from "@/lib/api-client";
-import type { BootstrapToken } from "@/types/api";
-import { toast } from "sonner";
+} from '@/components/ui/select'
+import { Card, CardContent } from '@/components/ui/card'
+import { apiClient } from '@/lib/api-client'
+import type { BootstrapToken } from '@/types/api'
+import { toast } from 'sonner'
 
 export default function TokensPage() {
-  const [tokens, setTokens] = useState<BootstrapToken[]>([]);
-  const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(1);
-  const [perPage] = useState(20);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [tokens, setTokens] = useState<BootstrapToken[]>([])
+  const [total, setTotal] = useState(0)
+  const [page, setPage] = useState(1)
+  const [perPage] = useState(20)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isRefreshing, setIsRefreshing] = useState(false)
 
   // Create token dialog
-  const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  const [isCreating, setIsCreating] = useState(false);
-  const [newToken, setNewToken] = useState<string | null>(null);
+  const [createDialogOpen, setCreateDialogOpen] = useState(false)
+  const [isCreating, setIsCreating] = useState(false)
+  const [newToken, setNewToken] = useState<string | null>(null)
   const [createForm, setCreateForm] = useState({
-    description: "",
+    description: '',
     max_uses: 5,
     expires_in_hours: 24,
-  });
+  })
 
   // Delete confirmation
   const [deleteDialog, setDeleteDialog] = useState<{
-    open: boolean;
-    token: BootstrapToken | null;
-  }>({ open: false, token: null });
+    open: boolean
+    token: BootstrapToken | null
+  }>({ open: false, token: null })
 
   const fetchTokens = useCallback(async () => {
     try {
       const response = await apiClient.listBootstrapTokens({
         page,
         per_page: perPage,
-      });
-      setTokens(response.data);
-      setTotal(response.total);
+      })
+      setTokens(response.data)
+      setTotal(response.total)
     } catch (error) {
-      console.error("Failed to fetch tokens:", error);
-      toast.error("Failed to fetch tokens");
+      console.error('Failed to fetch tokens:', error)
+      toast.error('Failed to fetch tokens')
     } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
+      setIsLoading(false)
+      setIsRefreshing(false)
     }
-  }, [page, perPage]);
+  }, [page, perPage])
 
   useEffect(() => {
-    fetchTokens();
-  }, [fetchTokens]);
+    fetchTokens()
+  }, [fetchTokens])
 
   const handleRefresh = () => {
-    setIsRefreshing(true);
-    fetchTokens();
-  };
+    setIsRefreshing(true)
+    fetchTokens()
+  }
 
   const handleCreate = async () => {
-    setIsCreating(true);
+    setIsCreating(true)
     try {
       const response = await apiClient.createBootstrapToken({
         description: createForm.description || undefined,
         max_uses: createForm.max_uses,
         expires_in_hours: createForm.expires_in_hours,
-      });
-      setNewToken(response.token);
-      toast.success("Bootstrap token created");
-      fetchTokens();
+      })
+      setNewToken(response.token)
+      toast.success('Bootstrap token created')
+      fetchTokens()
     } catch (error) {
-      console.error("Failed to create token:", error);
-      toast.error("Failed to create token");
+      console.error('Failed to create token:', error)
+      toast.error('Failed to create token')
     } finally {
-      setIsCreating(false);
+      setIsCreating(false)
     }
-  };
+  }
 
   const handleRevoke = async () => {
-    if (!deleteDialog.token) return;
+    if (!deleteDialog.token) return
     try {
-      await apiClient.revokeBootstrapToken(deleteDialog.token.id);
-      toast.success("Token revoked");
-      setDeleteDialog({ open: false, token: null });
-      fetchTokens();
+      await apiClient.revokeBootstrapToken(deleteDialog.token.id)
+      toast.success('Token revoked')
+      setDeleteDialog({ open: false, token: null })
+      fetchTokens()
     } catch (error) {
-      console.error("Failed to revoke token:", error);
-      toast.error("Failed to revoke token");
+      console.error('Failed to revoke token:', error)
+      toast.error('Failed to revoke token')
     }
-  };
+  }
 
   const handleCloseCreateDialog = () => {
-    setCreateDialogOpen(false);
-    setNewToken(null);
+    setCreateDialogOpen(false)
+    setNewToken(null)
     setCreateForm({
-      description: "",
+      description: '',
       max_uses: 5,
       expires_in_hours: 24,
-    });
-  };
+    })
+  }
 
   const getTokenStatus = (token: BootstrapToken) => {
     if (token.is_expired) {
-      return <Badge variant="secondary">Expired</Badge>;
+      return <Badge variant="secondary">Expired</Badge>
     }
     if (token.is_exhausted) {
-      return <Badge variant="outline">Exhausted</Badge>;
+      return <Badge variant="outline">Exhausted</Badge>
     }
-    return <Badge variant="default">Active</Badge>;
-  };
+    return <Badge variant="default">Active</Badge>
+  }
 
-  const totalPages = Math.ceil(total / perPage);
+  const totalPages = Math.ceil(total / perPage)
 
   if (isLoading) {
-    return <TokensPageSkeleton />;
+    return <TokensPageSkeleton />
   }
 
   return (
@@ -162,18 +162,11 @@ export default function TokensPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Bootstrap Tokens</h1>
-          <p className="text-muted-foreground">
-            Create and manage agent bootstrap tokens
-          </p>
+          <p className="text-muted-foreground">Create and manage agent bootstrap tokens</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleRefresh}
-            disabled={isRefreshing}
-          >
-            <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
+          <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isRefreshing}>
+            <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
             Refresh
           </Button>
           <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
@@ -194,16 +187,14 @@ export default function TokensPage() {
                   </DialogHeader>
                   <div className="space-y-4">
                     <div className="flex items-center gap-2 p-3 bg-muted rounded-md">
-                      <code className="flex-1 text-sm font-mono break-all">
-                        {newToken}
-                      </code>
+                      <code className="flex-1 text-sm font-mono break-all">{newToken}</code>
                       <CopyButton text={newToken} />
                     </div>
                     <div className="flex items-start gap-2 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-md text-sm">
                       <AlertCircle className="h-4 w-4 text-yellow-600 mt-0.5" />
                       <p className="text-yellow-800 dark:text-yellow-200">
-                        This token will only be shown once. Make sure to copy it
-                        before closing this dialog.
+                        This token will only be shown once. Make sure to copy it before closing this
+                        dialog.
                       </p>
                     </div>
                   </div>
@@ -289,7 +280,7 @@ export default function TokensPage() {
                       Cancel
                     </Button>
                     <Button onClick={handleCreate} disabled={isCreating}>
-                      {isCreating ? "Creating..." : "Create Token"}
+                      {isCreating ? 'Creating...' : 'Create Token'}
                     </Button>
                   </DialogFooter>
                 </>
@@ -307,10 +298,9 @@ export default function TokensPage() {
             <div className="text-sm">
               <p className="font-medium">About Bootstrap Tokens</p>
               <p className="text-muted-foreground">
-                Bootstrap tokens are used for initial platform agent registration.
-                Each token has a limited number of uses and expiration time.
-                Once an agent registers, it receives its own API key for ongoing
-                communication.
+                Bootstrap tokens are used for initial platform agent registration. Each token has a
+                limited number of uses and expiration time. Once an agent registers, it receives its
+                own API key for ongoing communication.
               </p>
             </div>
           </div>
@@ -346,16 +336,12 @@ export default function TokensPage() {
                     <code className="text-sm">{token.token_prefix}...</code>
                   </TableCell>
                   <TableCell>
-                    <span className="truncate max-w-[200px] block">
-                      {token.description || "-"}
-                    </span>
+                    <span className="truncate max-w-[200px] block">{token.description || '-'}</span>
                   </TableCell>
                   <TableCell>{getTokenStatus(token)}</TableCell>
                   <TableCell>
                     <span className="font-medium">{token.current_uses}</span>
-                    <span className="text-muted-foreground">
-                      /{token.max_uses}
-                    </span>
+                    <span className="text-muted-foreground">/{token.max_uses}</span>
                   </TableCell>
                   <TableCell>
                     {token.is_expired ? (
@@ -428,15 +414,12 @@ export default function TokensPage() {
           <DialogHeader>
             <DialogTitle>Revoke Token</DialogTitle>
             <DialogDescription>
-              Are you sure you want to revoke this token? Agents that haven&apos;t
-              registered yet won&apos;t be able to use it.
+              Are you sure you want to revoke this token? Agents that haven&apos;t registered yet
+              won&apos;t be able to use it.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setDeleteDialog({ open: false, token: null })}
-            >
+            <Button variant="outline" onClick={() => setDeleteDialog({ open: false, token: null })}>
               Cancel
             </Button>
             <Button variant="destructive" onClick={handleRevoke}>
@@ -446,27 +429,23 @@ export default function TokensPage() {
         </DialogContent>
       </Dialog>
     </div>
-  );
+  )
 }
 
 function CopyButton({ text }: { text: string }) {
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState(false)
 
   const handleCopy = async () => {
-    await navigator.clipboard.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
+    await navigator.clipboard.writeText(text)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
 
   return (
     <Button variant="ghost" size="icon" onClick={handleCopy}>
-      {copied ? (
-        <Check className="h-4 w-4 text-green-500" />
-      ) : (
-        <Copy className="h-4 w-4" />
-      )}
+      {copied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
     </Button>
-  );
+  )
 }
 
 function TokensPageSkeleton() {
@@ -485,5 +464,5 @@ function TokensPageSkeleton() {
         </div>
       </div>
     </div>
-  );
+  )
 }
