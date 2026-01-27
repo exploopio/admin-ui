@@ -19,10 +19,13 @@ export interface Agent {
   capabilities: string[]
   tools: string[]
   version?: string
-  max_concurrent_jobs?: number
+  max_concurrent_jobs: number
+  current_jobs: number
+  cpu_percent: number
+  memory_percent: number
+  disk_read_mbps: number
+  disk_write_mbps: number
   last_heartbeat_at?: string
-  lease_expires_at?: string
-  registered_at?: string
   created_at: string
   updated_at: string
 }
@@ -93,12 +96,13 @@ export interface Admin {
 }
 
 // Platform stats
+// Platform stats (aggregated in client)
 export interface PlatformStats {
   agents: {
     total: number
     online: number
     offline: number
-    draining: number // maps to disabled
+    draining: number
   }
   jobs: {
     queued: number

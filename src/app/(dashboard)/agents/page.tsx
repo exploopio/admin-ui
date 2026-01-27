@@ -49,7 +49,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { apiClient } from '@/lib/api-client'
-import type { Agent, AgentStatus } from '@/types/api'
+import type { Agent } from '@/types/api'
 import { toast } from 'sonner'
 
 export default function AgentsPage() {
@@ -134,18 +134,17 @@ export default function AgentsPage() {
     }
   }
 
-  const getStatusBadge = (status: AgentStatus) => {
-    const variants: Record<AgentStatus, 'default' | 'secondary' | 'destructive' | 'outline'> = {
-      online: 'default',
-      offline: 'secondary',
-      draining: 'outline',
-      unhealthy: 'destructive',
+  const getStatusBadge = (agent: Agent) => {
+    if (agent.status === 'disabled') {
+      return <Badge variant="outline">Draining</Badge>
     }
-    return (
-      <Badge variant={variants[status]} className="capitalize">
-        {status}
-      </Badge>
-    )
+    if (agent.health === 'offline') {
+      return <Badge variant="secondary">Offline</Badge>
+    }
+    if (agent.health === 'online') {
+      return <Badge variant="default">Online</Badge>
+    }
+    return <Badge variant="destructive">Unknown</Badge>
   }
 
   const totalPages = Math.ceil(total / perPage)
@@ -199,7 +198,7 @@ export default function AgentsPage() {
               <SelectContent>
                 <SelectItem value="all">All</SelectItem>
                 {regions.map((region) => (
-                  <SelectItem key={region} value={region}>
+                  <SelectItem key={region as string} value={region as string}>
                     {region}
                   </SelectItem>
                 ))}
@@ -246,7 +245,7 @@ export default function AgentsPage() {
                       <p className="text-xs text-muted-foreground">v{agent.version}</p>
                     </div>
                   </TableCell>
-                  <TableCell>{getStatusBadge(agent.status)}</TableCell>
+                  <TableCell>{getStatusBadge(agent)}</TableCell>
                   <TableCell>{agent.region || '-'}</TableCell>
                   <TableCell>
                     <span className="font-medium">{agent.current_jobs}</span>
@@ -254,15 +253,15 @@ export default function AgentsPage() {
                   </TableCell>
                   <TableCell>
                     <div className="text-xs space-y-0.5">
-                      <div>CPU: {agent.cpu_usage}%</div>
-                      <div>Mem: {agent.memory_usage}%</div>
+                      <div>CPU: {agent.cpu_percent}%</div>
+                      <div>Mem: {agent.memory_percent}%</div>
                     </div>
                   </TableCell>
                   <TableCell>
                     {agent.last_heartbeat_at
                       ? formatDistanceToNow(new Date(agent.last_heartbeat_at), {
-                          addSuffix: true,
-                        })
+                        addSuffix: true,
+                      })
                       : '-'}
                   </TableCell>
                   <TableCell>
@@ -280,12 +279,12 @@ export default function AgentsPage() {
                           </Link>
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />
-                        {agent.status === 'online' ? (
+                        {agent.status === 'active' ? (
                           <DropdownMenuItem onClick={() => handleDrain(agent)}>
                             <Pause className="mr-2 h-4 w-4" />
                             Drain
                           </DropdownMenuItem>
-                        ) : agent.status === 'draining' ? (
+                        ) : agent.status === 'disabled' ? (
                           <DropdownMenuItem onClick={() => handleUncordon(agent)}>
                             <Play className="mr-2 h-4 w-4" />
                             Uncordon

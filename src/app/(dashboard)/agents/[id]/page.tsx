@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
@@ -30,9 +30,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Separator } from '@/components/ui/separator'
 import { apiClient } from '@/lib/api-client'
-import type { Agent, AgentStatus } from '@/types/api'
+import type { Agent } from '@/types/api'
 import { toast } from 'sonner'
 
 export default function AgentDetailPage() {
@@ -44,7 +43,7 @@ export default function AgentDetailPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
 
-  const fetchAgent = async () => {
+  const fetchAgent = useCallback(async () => {
     try {
       const data = await apiClient.getAgent(agentId)
       setAgent(data)
@@ -54,11 +53,11 @@ export default function AgentDetailPage() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [agentId])
 
   useEffect(() => {
     fetchAgent()
-  }, [agentId])
+  }, [fetchAgent])
 
   const handleDrain = async () => {
     if (!agent) return
@@ -96,18 +95,17 @@ export default function AgentDetailPage() {
     }
   }
 
-  const getStatusBadge = (status: AgentStatus) => {
-    const variants: Record<AgentStatus, 'default' | 'secondary' | 'destructive' | 'outline'> = {
-      online: 'default',
-      offline: 'secondary',
-      draining: 'outline',
-      unhealthy: 'destructive',
+  const getStatusBadge = (agent: Agent) => {
+    if (agent.status === 'disabled') {
+      return <Badge variant="outline">Draining</Badge>
     }
-    return (
-      <Badge variant={variants[status]} className="capitalize text-base px-3 py-1">
-        {status}
-      </Badge>
-    )
+    if (agent.health === 'offline') {
+      return <Badge variant="secondary">Offline</Badge>
+    }
+    if (agent.health === 'online') {
+      return <Badge variant="default">Online</Badge>
+    }
+    return <Badge variant="destructive">Unknown</Badge>
   }
 
   if (isLoading) {
@@ -145,7 +143,7 @@ export default function AgentDetailPage() {
           <div>
             <div className="flex items-center gap-3">
               <h1 className="text-3xl font-bold tracking-tight">{agent.name}</h1>
-              {getStatusBadge(agent.status)}
+              {getStatusBadge(agent)}
             </div>
             <p className="text-muted-foreground">
               Version {agent.version} | Region: {agent.region || 'N/A'}
@@ -157,12 +155,12 @@ export default function AgentDetailPage() {
             <RefreshCw className="mr-2 h-4 w-4" />
             Refresh
           </Button>
-          {agent.status === 'online' ? (
+          {agent.status === 'active' ? (
             <Button variant="outline" size="sm" onClick={handleDrain}>
               <Pause className="mr-2 h-4 w-4" />
               Drain
             </Button>
-          ) : agent.status === 'draining' ? (
+          ) : agent.status === 'disabled' ? (
             <Button variant="outline" size="sm" onClick={handleUncordon}>
               <Play className="mr-2 h-4 w-4" />
               Uncordon
@@ -192,12 +190,12 @@ export default function AgentDetailPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Completed</CardTitle>
+            <CardTitle className="text-sm font-medium">Network I/O</CardTitle>
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{agent.total_jobs_completed}</div>
-            <p className="text-xs text-muted-foreground">{agent.total_jobs_failed} failed</p>
+            <div className="text-2xl font-bold">N/A</div>
+            <p className="text-xs text-muted-foreground">Network metrics unavailable</p>
           </CardContent>
         </Card>
 
@@ -210,36 +208,33 @@ export default function AgentDetailPage() {
             <div className="text-2xl font-bold">
               {agent.last_heartbeat_at
                 ? formatDistanceToNow(new Date(agent.last_heartbeat_at), {
-                    addSuffix: true,
-                  })
+                  addSuffix: true,
+                })
                 : 'Never'}
             </div>
             <p className="text-xs text-muted-foreground">
-              Lease expires{' '}
-              {agent.lease_expires_at
-                ? formatDistanceToNow(new Date(agent.lease_expires_at), {
-                    addSuffix: true,
-                  })
-                : 'N/A'}
+              Last seen {agent.last_heartbeat_at
+                ? format(new Date(agent.last_heartbeat_at), 'PPP p')
+                : 'Never'}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Registered</CardTitle>
+            <CardTitle className="text-sm font-medium">Created</CardTitle>
             <Server className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {agent.registered_at
-                ? formatDistanceToNow(new Date(agent.registered_at), {
-                    addSuffix: true,
-                  })
+              {agent.created_at
+                ? formatDistanceToNow(new Date(agent.created_at), {
+                  addSuffix: true,
+                })
                 : 'N/A'}
             </div>
             <p className="text-xs text-muted-foreground">
-              {agent.registered_at ? format(new Date(agent.registered_at), 'PPP') : 'N/A'}
+              {agent.created_at ? format(new Date(agent.created_at), 'PPP') : 'N/A'}
             </p>
           </CardContent>
         </Card>
@@ -261,10 +256,10 @@ export default function AgentDetailPage() {
                 <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
                   <div
                     className="h-full bg-primary transition-all"
-                    style={{ width: `${agent.cpu_usage}%` }}
+                    style={{ width: `${agent.cpu_percent}%` }}
                   />
                 </div>
-                <span className="text-sm font-medium w-12 text-right">{agent.cpu_usage}%</span>
+                <span className="text-sm font-medium w-12 text-right">{agent.cpu_percent}%</span>
               </div>
             </div>
 
@@ -277,26 +272,21 @@ export default function AgentDetailPage() {
                 <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
                   <div
                     className="h-full bg-primary transition-all"
-                    style={{ width: `${agent.memory_usage}%` }}
+                    style={{ width: `${agent.memory_percent}%` }}
                   />
                 </div>
-                <span className="text-sm font-medium w-12 text-right">{agent.memory_usage}%</span>
+                <span className="text-sm font-medium w-12 text-right">{agent.memory_percent}%</span>
               </div>
             </div>
 
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <HardDrive className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm font-medium">Disk Usage</span>
+                <span className="text-sm font-medium">Disk I/O</span>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-primary transition-all"
-                    style={{ width: `${agent.disk_usage}%` }}
-                  />
-                </div>
-                <span className="text-sm font-medium w-12 text-right">{agent.disk_usage}%</span>
+              <div className="text-sm">
+                <div>Read: {agent.disk_read_mbps} MB/s</div>
+                <div>Write: {agent.disk_write_mbps} MB/s</div>
               </div>
             </div>
           </div>

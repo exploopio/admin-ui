@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import Link from 'next/link'
+
 import {
   ScrollText,
   RefreshCw,
@@ -19,7 +19,7 @@ import { formatDistanceToNow, format, subDays } from 'date-fns'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Input } from '@/components/ui/input'
+
 import { Label } from '@/components/ui/label'
 import {
   Table,
@@ -152,7 +152,7 @@ export default function AuditLogsPage() {
     dateRange !== '7d'
 
   const getActionBadge = (action: AuditAction) => {
-    const [category, type] = action.split('.')
+    const [category] = action.split('.')
     const colorMap: Record<string, string> = {
       agent: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
       job: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200',

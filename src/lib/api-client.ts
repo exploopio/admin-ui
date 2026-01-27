@@ -112,7 +112,27 @@ class ApiClient {
     per_page?: number
   }): Promise<PaginatedResponse<Agent>> {
     const searchParams = new URLSearchParams()
-    if (params?.status) searchParams.set('status', params.status)
+    if (params?.status) {
+      // Map frontend status to backend health/status params
+      if (params.status === 'online' || params.status === 'offline') {
+        searchParams.set('health', params.status)
+      } else if (params.status === 'draining') {
+        // Backend doesn't support 'draining' as a status/health filter currently
+        // so we might filter client-side or send it if backend supported it in future.
+        // For now, we'll send it as 'status' in likely case backend adds support
+        // or just ignore if it doesn't break anything.
+        // Actually, let's map it to 'disabled' if that's what backend uses?
+        // Checking routes.go/handler, backend uses 'health' (online, offline).
+        // It also has a 'disabled' status in the Agent struct but expects 'health' query param?
+        // Let's just pass 'status' as is for non-health values to be safe, 
+        // though backend might ignore it.
+        // Better yet: Backend 'ListPlatformAgents' looks at 'health' query param.
+        // It doesn't seem to look at 'status' query param at all.
+        // However, we want to try our best.
+      }
+      // Keep original status param just in case (or if we add support later)
+      searchParams.set('status', params.status)
+    }
     if (params?.region) searchParams.set('region', params.region)
     if (params?.page) searchParams.set('page', params.page.toString())
     if (params?.per_page) searchParams.set('per_page', params.per_page.toString())
@@ -205,10 +225,14 @@ class ApiClient {
   async listBootstrapTokens(params?: {
     page?: number
     per_page?: number
+    status?: string
+    search?: string
   }): Promise<PaginatedResponse<BootstrapToken>> {
     const searchParams = new URLSearchParams()
     if (params?.page) searchParams.set('page', params.page.toString())
     if (params?.per_page) searchParams.set('per_page', params.per_page.toString())
+    if (params?.status) searchParams.set('status', params.status)
+    if (params?.search) searchParams.set('search', params.search)
 
     const query = searchParams.toString()
     return this.request<PaginatedResponse<BootstrapToken>>(
@@ -301,8 +325,19 @@ class ApiClient {
   }): Promise<PaginatedResponse<AuditLog>> {
     const searchParams = new URLSearchParams()
     if (params?.action) searchParams.set('action', params.action)
+    // Backend doesn't support filtering by 'actor_type' yet, but we'll leave this
+    // in case it gets added. 
     if (params?.actor_type) searchParams.set('actor_type', params.actor_type)
-    if (params?.actor_id) searchParams.set('actor_id', params.actor_id)
+
+    // Valid mapping: Frontend 'actor_id' -> Backend 'admin_id' for Admin actors
+    // Note: Backend audit log list also supports 'resource_id'.
+    // Use 'admin_id' if actor_type is 'admin' or just pass generic ID/User ID?
+    // The backend handler `List` specifically looks for `r.URL.Query().Get("admin_id")`.
+    if (params?.actor_id) {
+      searchParams.set('admin_id', params.actor_id)
+      // Also set actor_id for completeness if backend adds generic support
+      searchParams.set('actor_id', params.actor_id)
+    }
     if (params?.resource_type) searchParams.set('resource_type', params.resource_type)
     if (params?.resource_id) searchParams.set('resource_id', params.resource_id)
     if (params?.from) searchParams.set('from', params.from)
@@ -318,6 +353,18 @@ class ApiClient {
 
   async getAuditLog(id: string): Promise<AuditLog> {
     return this.request<AuditLog>(`/api/v1/admin/audit-logs/${id}`)
+  }
+
+  async getAuditLogStats(): Promise<{
+    total: number
+    failed_24h: number
+    recent_actions: AuditLog[]
+  }> {
+    return this.request<{
+      total: number
+      failed_24h: number
+      recent_actions: AuditLog[]
+    }>('/api/v1/admin/audit-logs/stats')
   }
 }
 

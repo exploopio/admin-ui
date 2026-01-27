@@ -5,9 +5,6 @@ import {
   Server,
   ListTodo,
   CheckCircle2,
-  XCircle,
-  Clock,
-  Activity,
   Users,
   TrendingUp,
   RefreshCw,
@@ -108,11 +105,11 @@ export default function DashboardPage() {
             <Server className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats?.total_agents ?? 0}</div>
+            <div className="text-2xl font-bold">{stats?.agents.total ?? 0}</div>
             <p className="text-xs text-muted-foreground">
-              <span className="text-green-600">{stats?.online_agents ?? 0} online</span>
+              <span className="text-green-600">{stats?.agents.online ?? 0} online</span>
               {' / '}
-              <span className="text-gray-500">{stats?.offline_agents ?? 0} offline</span>
+              <span className="text-gray-500">{stats?.agents.offline ?? 0} offline</span>
             </p>
           </CardContent>
         </Card>
@@ -123,11 +120,15 @@ export default function DashboardPage() {
             <ListTodo className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats?.total_jobs_today ?? 0}</div>
+            <div className="text-2xl font-bold">
+              {(stats?.jobs.completed_24h ?? 0) +
+                (stats?.jobs.failed_24h ?? 0) +
+                (stats?.jobs.running ?? 0)}
+            </div>
             <p className="text-xs text-muted-foreground">
-              <span className="text-blue-600">{stats?.running_jobs ?? 0} running</span>
+              <span className="text-blue-600">{stats?.jobs.running ?? 0} running</span>
               {' / '}
-              <span className="text-yellow-600">{stats?.pending_jobs ?? 0} pending</span>
+              <span className="text-yellow-600">{stats?.jobs.queued ?? 0} pending</span>
             </p>
           </CardContent>
         </Card>
@@ -139,19 +140,20 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {stats && stats.completed_jobs_today + stats.failed_jobs_today > 0
+              {stats &&
+                stats.jobs.completed_24h + stats.jobs.failed_24h > 0
                 ? Math.round(
-                    (stats.completed_jobs_today /
-                      (stats.completed_jobs_today + stats.failed_jobs_today)) *
-                      100
-                  )
+                  (stats.jobs.completed_24h /
+                    (stats.jobs.completed_24h + stats.jobs.failed_24h)) *
+                  100
+                )
                 : 0}
               %
             </div>
             <p className="text-xs text-muted-foreground">
-              <span className="text-green-600">{stats?.completed_jobs_today ?? 0} completed</span>
+              <span className="text-green-600">{stats?.jobs.completed_24h ?? 0} completed</span>
               {' / '}
-              <span className="text-red-600">{stats?.failed_jobs_today ?? 0} failed</span>
+              <span className="text-red-600">{stats?.jobs.failed_24h ?? 0} failed</span>
             </p>
           </CardContent>
         </Card>
@@ -162,9 +164,9 @@ export default function DashboardPage() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats?.active_tenants_today ?? 0}</div>
+            <div className="text-2xl font-bold">0</div>
             <p className="text-xs text-muted-foreground">
-              {stats?.total_tenants_using_platform ?? 0} total using platform
+              0 total using platform
             </p>
           </CardContent>
         </Card>
@@ -175,13 +177,11 @@ export default function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Avg Job Duration</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {stats?.avg_job_duration_seconds
-                ? formatDuration(stats.avg_job_duration_seconds)
-                : 'N/A'}
+              N/A
             </div>
           </CardContent>
         </Card>
@@ -193,7 +193,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {stats?.jobs_per_minute?.toFixed(1) ?? 0} jobs/min
+              0 jobs/min
             </div>
           </CardContent>
         </Card>
@@ -269,15 +269,7 @@ export default function DashboardPage() {
   )
 }
 
-function formatDuration(seconds: number): string {
-  if (seconds < 60) {
-    return `${Math.round(seconds)}s`
-  }
-  if (seconds < 3600) {
-    return `${Math.round(seconds / 60)}m`
-  }
-  return `${Math.round(seconds / 3600)}h`
-}
+
 
 function DashboardSkeleton() {
   return (

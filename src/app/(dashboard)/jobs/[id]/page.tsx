@@ -1,7 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import { useEffect, useState, useCallback } from 'react'
+import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import {
   ArrowLeft,
@@ -26,13 +26,12 @@ import { toast } from 'sonner'
 
 export default function JobDetailPage() {
   const params = useParams()
-  const router = useRouter()
   const jobId = params.id as string
 
   const [job, setJob] = useState<Job | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
-  const fetchJob = async () => {
+  const fetchJob = useCallback(async () => {
     try {
       const data = await apiClient.getJob(jobId)
       setJob(data)
@@ -42,7 +41,7 @@ export default function JobDetailPage() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [jobId])
 
   useEffect(() => {
     fetchJob()
@@ -53,7 +52,7 @@ export default function JobDetailPage() {
       }
     }, 5000)
     return () => clearInterval(interval)
-  }, [jobId, job?.status])
+  }, [jobId, job?.status, fetchJob])
 
   const handleCancel = async () => {
     if (!job) return
@@ -293,7 +292,7 @@ export default function JobDetailPage() {
                   {job.started_at &&
                     Math.round(
                       (new Date(job.completed_at).getTime() - new Date(job.started_at).getTime()) /
-                        1000
+                      1000
                     )}
                   s
                 </p>

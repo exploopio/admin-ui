@@ -21,7 +21,7 @@ The Admin UI provides operational management for the Rediver platform's shared a
 
 | Technology | Version | Purpose |
 |------------|---------|---------|
-| Next.js | 16 (canary) | React framework |
+| Next.js | 16+ | React framework |
 | React | 19 | UI library |
 | TypeScript | 5.x | Type safety |
 | Tailwind CSS | 4.x | Styling |
