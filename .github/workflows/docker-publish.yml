@@ -21,7 +21,7 @@ on:
 
 env:
   REGISTRY: docker.io
-  IMAGE_NAME: rediverio/admin-ui
+  IMAGE_NAME: exploopio/admin-ui
 
 jobs:
   # ============================================
@@ -110,7 +110,7 @@ jobs:
           provenance: false
           sbom: false
           build-args: |
-            NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL || 'https://api.rediver.io' }}
+            NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL || 'https://api.exploop.io' }}
 
       - name: Export digest
         run: |

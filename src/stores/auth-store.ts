@@ -139,7 +139,7 @@ export const useAuthStore = create<AuthState>()(
       },
     }),
     {
-      name: 'rediver-admin-auth',
+      name: 'admin-auth',
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         apiKey: state.apiKey,

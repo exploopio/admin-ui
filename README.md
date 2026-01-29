@@ -1,11 +1,11 @@
-# Rediver Platform Admin UI
+# Exploop Platform Admin UI
 
 [![Next.js](https://img.shields.io/badge/Next.js-16-000000?logo=next.js)](https://nextjs.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript)](https://www.typescriptlang.org)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.x-06B6D4?logo=tailwindcss)](https://tailwindcss.com)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
-Platform Administration Console for managing Rediver Platform Agents, jobs, bootstrap tokens, and administrators.
+Platform Administration Console for managing Exploop Platform Agents, jobs, bootstrap tokens, and administrators.
 
 ## Overview
 

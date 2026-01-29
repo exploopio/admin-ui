@@ -14,7 +14,7 @@
 services:
   admin-ui:
     # Pull from Docker Hub by default, build locally if --build flag is used
-    image: rediverio/admin-ui:${ADMIN_UI_VERSION:-latest}
+    image: exploopio/admin-ui:${ADMIN_UI_VERSION:-latest}
     build:
       context: .
       dockerfile: Dockerfile
