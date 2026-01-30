@@ -14,6 +14,10 @@ import type {
   AuditLog,
   AuditAction,
   AuditActorType,
+  AgentSession,
+  AgentDailyStats,
+  AgentSessionStats,
+  AggregatedDailyStats,
 } from '@/types/api'
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
@@ -365,6 +369,113 @@ class ApiClient {
       failed_24h: number
       recent_actions: AuditLog[]
     }>('/api/v1/admin/audit-logs/stats')
+  }
+
+  // ==========================================================================
+  // Agent Analytics (Sessions & Daily Stats)
+  // ==========================================================================
+
+  async listAgentSessions(
+    agentId: string,
+    params?: {
+      is_active?: boolean
+      started_at?: string
+      ended_at?: string
+      page?: number
+      per_page?: number
+    }
+  ): Promise<PaginatedResponse<AgentSession>> {
+    const searchParams = new URLSearchParams()
+    if (params?.is_active !== undefined) searchParams.set('is_active', params.is_active.toString())
+    if (params?.started_at) searchParams.set('started_at', params.started_at)
+    if (params?.ended_at) searchParams.set('ended_at', params.ended_at)
+    if (params?.page) searchParams.set('page', params.page.toString())
+    if (params?.per_page) searchParams.set('per_page', params.per_page.toString())
+
+    const query = searchParams.toString()
+    return this.request<PaginatedResponse<AgentSession>>(
+      `/api/v1/admin/agents/${agentId}/sessions${query ? `?${query}` : ''}`
+    )
+  }
+
+  async getActiveAgentSession(agentId: string): Promise<AgentSession | null> {
+    try {
+      return await this.request<AgentSession>(`/api/v1/admin/agents/${agentId}/sessions/active`)
+    } catch (error) {
+      if (error instanceof ApiClientError && error.status === 404) {
+        return null
+      }
+      throw error
+    }
+  }
+
+  async getAgentSessionStats(
+    agentId: string,
+    params?: {
+      started_at?: string
+      ended_at?: string
+    }
+  ): Promise<AgentSessionStats> {
+    const searchParams = new URLSearchParams()
+    if (params?.started_at) searchParams.set('started_at', params.started_at)
+    if (params?.ended_at) searchParams.set('ended_at', params.ended_at)
+
+    const query = searchParams.toString()
+    return this.request<AgentSessionStats>(
+      `/api/v1/admin/agents/${agentId}/sessions/stats${query ? `?${query}` : ''}`
+    )
+  }
+
+  async listAgentDailyStats(
+    agentId: string,
+    params?: {
+      from?: string
+      to?: string
+      page?: number
+      per_page?: number
+    }
+  ): Promise<PaginatedResponse<AgentDailyStats>> {
+    const searchParams = new URLSearchParams()
+    if (params?.from) searchParams.set('from', params.from)
+    if (params?.to) searchParams.set('to', params.to)
+    if (params?.page) searchParams.set('page', params.page.toString())
+    if (params?.per_page) searchParams.set('per_page', params.per_page.toString())
+
+    const query = searchParams.toString()
+    return this.request<PaginatedResponse<AgentDailyStats>>(
+      `/api/v1/admin/agents/${agentId}/stats${query ? `?${query}` : ''}`
+    )
+  }
+
+  async getAgentTimeSeries(
+    agentId: string,
+    params?: {
+      from?: string
+      to?: string
+    }
+  ): Promise<AgentDailyStats[]> {
+    const searchParams = new URLSearchParams()
+    if (params?.from) searchParams.set('from', params.from)
+    if (params?.to) searchParams.set('to', params.to)
+
+    const query = searchParams.toString()
+    return this.request<AgentDailyStats[]>(
+      `/api/v1/admin/agents/${agentId}/stats/daily${query ? `?${query}` : ''}`
+    )
+  }
+
+  async getAggregatedStats(params?: {
+    from?: string
+    to?: string
+  }): Promise<AggregatedDailyStats> {
+    const searchParams = new URLSearchParams()
+    if (params?.from) searchParams.set('from', params.from)
+    if (params?.to) searchParams.set('to', params.to)
+
+    const query = searchParams.toString()
+    return this.request<AggregatedDailyStats>(
+      `/api/v1/admin/agents/stats/aggregated${query ? `?${query}` : ''}`
+    )
   }
 }
 

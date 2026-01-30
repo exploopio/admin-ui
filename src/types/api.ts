@@ -182,3 +182,65 @@ export interface AuthResponse {
 export interface LoginRequest {
   api_key: string
 }
+
+// =============================================================================
+// Agent Analytics Types
+// =============================================================================
+
+// Agent Session - tracks each online session with stats
+export interface AgentSession {
+  id: string
+  agent_id: string
+  started_at: string
+  ended_at?: string
+  duration_seconds?: number
+  findings_count: number
+  scans_count: number
+  errors_count: number
+  jobs_completed: number
+  version?: string
+  hostname?: string
+  ip_address?: string
+  region?: string
+  created_at: string
+}
+
+// Agent Daily Stats - aggregated daily statistics
+export interface AgentDailyStats {
+  id: string
+  agent_id: string
+  date: string
+  total_findings: number
+  total_scans: number
+  total_errors: number
+  total_jobs: number
+  online_seconds: number
+  offline_seconds: number
+  session_count: number
+  created_at: string
+  updated_at: string
+}
+
+// Agent Session Stats - aggregate stats for an agent over a time range
+export interface AgentSessionStats {
+  total_sessions: number
+  total_findings: number
+  total_scans: number
+  total_errors: number
+  total_jobs: number
+  total_online_seconds: number
+  average_session_time_seconds: number
+}
+
+// Aggregated Daily Stats - platform-wide stats
+export interface AggregatedDailyStats {
+  total_findings: number
+  total_scans: number
+  total_errors: number
+  total_jobs: number
+  total_online_seconds: number
+  total_offline_seconds: number
+  total_sessions: number
+  unique_agents: number
+  average_uptime_percent: number
+}

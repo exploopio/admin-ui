@@ -15,13 +15,18 @@ import {
   Play,
   Trash2,
   RefreshCw,
+  BarChart3,
+  Search,
+  Bug,
+  CheckCircle,
+  Timer,
 } from 'lucide-react'
-import { formatDistanceToNow, format } from 'date-fns'
+import { formatDistanceToNow, format, subDays } from 'date-fns'
 
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import {
   Dialog,
   DialogContent,
@@ -31,8 +36,15 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { apiClient } from '@/lib/api-client'
-import type { Agent } from '@/types/api'
+import type { Agent, AgentSessionStats, AgentSession } from '@/types/api'
 import { toast } from 'sonner'
+
+function formatUptime(seconds: number): string {
+  if (seconds < 60) return `${seconds}s`
+  if (seconds < 3600) return `${Math.floor(seconds / 60)}m`
+  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h`
+  return `${Math.floor(seconds / 86400)}d`
+}
 
 export default function AgentDetailPage() {
   const params = useParams()
@@ -42,6 +54,9 @@ export default function AgentDetailPage() {
   const [agent, setAgent] = useState<Agent | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [sessionStats, setSessionStats] = useState<AgentSessionStats | null>(null)
+  const [activeSession, setActiveSession] = useState<AgentSession | null>(null)
+  const [analyticsLoading, setAnalyticsLoading] = useState(true)
 
   const fetchAgent = useCallback(async () => {
     try {
@@ -55,9 +70,29 @@ export default function AgentDetailPage() {
     }
   }, [agentId])
 
+  const fetchAnalytics = useCallback(async () => {
+    setAnalyticsLoading(true)
+    try {
+      // Fetch session stats for the last 30 days
+      const thirtyDaysAgo = subDays(new Date(), 30).toISOString()
+      const [stats, session] = await Promise.all([
+        apiClient.getAgentSessionStats(agentId, { started_at: thirtyDaysAgo }).catch(() => null),
+        apiClient.getActiveAgentSession(agentId).catch(() => null),
+      ])
+      setSessionStats(stats)
+      setActiveSession(session)
+    } catch (error) {
+      console.error('Failed to fetch analytics:', error)
+      // Silently fail - analytics are not critical
+    } finally {
+      setAnalyticsLoading(false)
+    }
+  }, [agentId])
+
   useEffect(() => {
     fetchAgent()
-  }, [fetchAgent])
+    fetchAnalytics()
+  }, [fetchAgent, fetchAnalytics])
 
   const handleDrain = async () => {
     if (!agent) return
@@ -290,6 +325,107 @@ export default function AgentDetailPage() {
               </div>
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Analytics Section */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5" />
+                Analytics
+              </CardTitle>
+              <CardDescription>Session statistics for the last 30 days</CardDescription>
+            </div>
+            {activeSession && (
+              <Badge variant="default" className="flex items-center gap-1">
+                <Activity className="h-3 w-3" />
+                Active Session
+              </Badge>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent>
+          {analyticsLoading ? (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <Skeleton key={i} className="h-20 w-full" />
+              ))}
+            </div>
+          ) : sessionStats ? (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Activity className="h-4 w-4" />
+                  <span className="text-sm">Sessions</span>
+                </div>
+                <p className="text-2xl font-bold">{sessionStats.total_sessions}</p>
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Search className="h-4 w-4" />
+                  <span className="text-sm">Scans</span>
+                </div>
+                <p className="text-2xl font-bold">{sessionStats.total_scans}</p>
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Bug className="h-4 w-4" />
+                  <span className="text-sm">Findings</span>
+                </div>
+                <p className="text-2xl font-bold">{sessionStats.total_findings}</p>
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <CheckCircle className="h-4 w-4" />
+                  <span className="text-sm">Jobs Completed</span>
+                </div>
+                <p className="text-2xl font-bold">{sessionStats.total_jobs}</p>
+              </div>
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Timer className="h-4 w-4" />
+                  <span className="text-sm">Uptime</span>
+                </div>
+                <p className="text-2xl font-bold">
+                  {formatUptime(sessionStats.total_online_seconds)}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center py-8 text-muted-foreground">
+              <BarChart3 className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>No analytics data available</p>
+              <p className="text-sm">Analytics will appear once the agent starts processing jobs</p>
+            </div>
+          )}
+          {activeSession && (
+            <div className="mt-4 pt-4 border-t">
+              <p className="text-sm text-muted-foreground mb-2">Current Session</p>
+              <div className="grid gap-4 md:grid-cols-4 text-sm">
+                <div>
+                  <span className="text-muted-foreground">Started: </span>
+                  <span className="font-medium">
+                    {formatDistanceToNow(new Date(activeSession.started_at), { addSuffix: true })}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Findings: </span>
+                  <span className="font-medium">{activeSession.findings_count}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Scans: </span>
+                  <span className="font-medium">{activeSession.scans_count}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground">Jobs: </span>
+                  <span className="font-medium">{activeSession.jobs_completed}</span>
+                </div>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
