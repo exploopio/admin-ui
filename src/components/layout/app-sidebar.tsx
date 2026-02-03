@@ -12,6 +12,7 @@ import {
   Settings,
   LogOut,
   ScrollText,
+  ArrowLeftRight,
 } from 'lucide-react'
 
 import {
@@ -57,6 +58,11 @@ const menuItems = [
     title: 'Tokens',
     href: '/tokens',
     icon: Key,
+  },
+  {
+    title: 'Target Mappings',
+    href: '/target-mappings',
+    icon: ArrowLeftRight,
   },
   {
     title: 'Audit Logs',

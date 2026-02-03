@@ -244,3 +244,117 @@ export interface AggregatedDailyStats {
   unique_agents: number
   average_uptime_percent: number
 }
+
+// =============================================================================
+// Target Asset Type Mappings
+// =============================================================================
+
+/**
+ * Target to Asset Type mapping
+ * Maps scanner target types (url, domain, ip, etc.) to asset types (website, domain, ip_address, etc.)
+ */
+export interface TargetAssetTypeMapping {
+  id: string
+  target_type: string // Scanner's supported_targets value: url, domain, ip, repository, file, etc.
+  asset_type: string // Asset type code: website, domain, ip_address, repository, etc.
+  priority: number // Priority for ordering (lower = higher priority, 10 = primary)
+  is_active: boolean // Whether this mapping is active
+  is_primary: boolean // Is this the primary/canonical mapping for reverse lookup? (derived from priority == 10)
+  description?: string // Optional description
+  created_by?: string // ID of admin who created this mapping
+  created_at: string
+  updated_at: string
+}
+
+/**
+ * Request to create a new target mapping
+ */
+export interface CreateTargetMappingRequest {
+  target_type: string
+  asset_type: string
+  priority?: number
+  is_primary?: boolean // Convenience: sets priority to 10 if true
+  is_active?: boolean
+  description?: string
+}
+
+/**
+ * Request to update a target mapping
+ */
+export interface UpdateTargetMappingRequest {
+  priority?: number
+  is_primary?: boolean // Convenience: sets priority to 10 if true
+  is_active?: boolean
+  description?: string
+}
+
+/**
+ * Predefined target types for scanner compatibility
+ */
+export const TARGET_TYPES = [
+  'url',
+  'domain',
+  'subdomain',
+  'ip',
+  'ip_range',
+  'cidr',
+  'repository',
+  'file',
+  'container',
+  'cloud_account',
+  'kubernetes',
+  'network',
+  'host',
+  'api',
+  'smart_contract',
+  'wallet',
+] as const
+
+export type TargetType = (typeof TARGET_TYPES)[number]
+
+/**
+ * Asset types that can be mapped to targets
+ */
+export const ASSET_TYPES = [
+  'domain',
+  'subdomain',
+  'ip_address',
+  'certificate',
+  'website',
+  'web_application',
+  'api',
+  'mobile_app',
+  'service',
+  'repository',
+  'cloud_account',
+  'compute',
+  'storage',
+  'database',
+  'serverless',
+  'container_registry',
+  'host',
+  'server',
+  'container',
+  'kubernetes_cluster',
+  'kubernetes_namespace',
+  'network',
+  'vpc',
+  'subnet',
+  'load_balancer',
+  'firewall',
+  'iam_user',
+  'iam_role',
+  'service_account',
+  'http_service',
+  'open_port',
+  'discovered_url',
+  'smart_contract',
+  'wallet',
+  'token',
+  'nft_collection',
+  'defi_protocol',
+  'blockchain',
+  'unclassified',
+] as const
+
+export type AssetType = (typeof ASSET_TYPES)[number]

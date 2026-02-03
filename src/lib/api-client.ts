@@ -18,6 +18,9 @@ import type {
   AgentDailyStats,
   AgentSessionStats,
   AggregatedDailyStats,
+  TargetAssetTypeMapping,
+  CreateTargetMappingRequest,
+  UpdateTargetMappingRequest,
 } from '@/types/api'
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
@@ -476,6 +479,71 @@ class ApiClient {
     return this.request<AggregatedDailyStats>(
       `/api/v1/admin/agents/stats/aggregated${query ? `?${query}` : ''}`
     )
+  }
+
+  // ==========================================================================
+  // Target Asset Type Mappings
+  // ==========================================================================
+
+  async listTargetMappings(params?: {
+    target_type?: string
+    asset_type?: string
+    is_primary?: boolean
+    is_active?: boolean
+    page?: number
+    per_page?: number
+  }): Promise<PaginatedResponse<TargetAssetTypeMapping>> {
+    const searchParams = new URLSearchParams()
+    if (params?.target_type) searchParams.set('target_type', params.target_type)
+    if (params?.asset_type) searchParams.set('asset_type', params.asset_type)
+    if (params?.is_primary !== undefined) searchParams.set('is_primary', params.is_primary.toString())
+    if (params?.is_active !== undefined) searchParams.set('is_active', params.is_active.toString())
+    if (params?.page) searchParams.set('page', params.page.toString())
+    if (params?.per_page) searchParams.set('per_page', params.per_page.toString())
+
+    const query = searchParams.toString()
+    return this.request<PaginatedResponse<TargetAssetTypeMapping>>(
+      `/api/v1/admin/target-mappings${query ? `?${query}` : ''}`
+    )
+  }
+
+  async getTargetMapping(id: string): Promise<TargetAssetTypeMapping> {
+    return this.request<TargetAssetTypeMapping>(`/api/v1/admin/target-mappings/${id}`)
+  }
+
+  async createTargetMapping(data: CreateTargetMappingRequest): Promise<TargetAssetTypeMapping> {
+    return this.request<TargetAssetTypeMapping>('/api/v1/admin/target-mappings', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async updateTargetMapping(
+    id: string,
+    data: UpdateTargetMappingRequest
+  ): Promise<TargetAssetTypeMapping> {
+    return this.request<TargetAssetTypeMapping>(`/api/v1/admin/target-mappings/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    })
+  }
+
+  async deleteTargetMapping(id: string): Promise<void> {
+    return this.request<void>(`/api/v1/admin/target-mappings/${id}`, {
+      method: 'DELETE',
+    })
+  }
+
+  async getTargetMappingStats(): Promise<{
+    total: number
+    by_target_type: Record<string, number>
+    by_asset_type: Record<string, number>
+  }> {
+    return this.request<{
+      total: number
+      by_target_type: Record<string, number>
+      by_asset_type: Record<string, number>
+    }>('/api/v1/admin/target-mappings/stats')
   }
 }
 
